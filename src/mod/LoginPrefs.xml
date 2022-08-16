@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?> 
+<Root>
+    <Value name="PhotoModeIcon" value="true" />
+	<Value name="PhotoMode" value="true" />
+    <Value name="PhotoMode_Invert" value="true" />
+	<Value name="PhotoMode_x" value="20" />
+	<Value name="PhotoMode_y" value="40" />
+    <Archive name="PhotoMode_Cfg" />
+</Root>
