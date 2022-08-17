@@ -5,13 +5,15 @@ PhotoMode mod for Secret World Legends
 
 
 <details>
-  <summary><h3>Examples</h3></summary>
+<summary>
+<h3><ins>Images/Videos</ins></h3>
+
+</summary>
     
   https://user-images.githubusercontent.com/25548149/185160959-963d5925-ab7b-4798-b55c-340786892cfc.mp4
   
 ![1](https://user-images.githubusercontent.com/25548149/185174358-f7690e83-fe06-4230-a302-fc40cc86f491.png)
 ![2](https://user-images.githubusercontent.com/25548149/185180517-5f42335e-7ee7-4f77-aab0-549cba7c8f05.png)
-
 ![3](https://user-images.githubusercontent.com/25548149/185174396-7214e6d6-d0c7-4bf0-b764-32e5b400da45.png)
 ![4](https://user-images.githubusercontent.com/25548149/185175588-5f36af2c-690f-48dc-b4f7-75c81b757c5e.png)
 ![Starfox-2021-07-09-21-49-13](https://user-images.githubusercontent.com/25548149/185175928-b93431e5-7e54-495b-91a3-3bf884b82834.png)
