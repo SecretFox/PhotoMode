@@ -62,7 +62,7 @@ Don't forget the quotes (unless using true/false value)
 * `/option PhotoMode_Vanity "target/random/playerName/self"`, can also be accessed from the command window
 * `/option PhotoMode_Window true/false` Shows/Hides command window. Same as right clicking the icon
 * `/option PhotoMode_Emote "all/playername/target,EmoteName"` Plays client sided emote, for list of emotes see [here](https://github.com/super-jenius/Untold/blob/master/fox/Animation.xml)
-* `/option PhotoMode_StoreEmote1-10 "emoteString"` Stores emote string for PhotoMode_Emote command. Stored emote can be called in PhotoMode by pressing Select Team Member 1-10 keybinds (hold Alt for 11-20)
+* `/option PhotoMode_StoreEmote1-10 "emoteString"` Stores emote string for PhotoMode_Emote command. Stored emote can be called in PhotoMode by pressing Select Team Member 1-10 keybinds
 
 
 ### Install
