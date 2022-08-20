@@ -2,6 +2,7 @@ import com.GameInterface.DistributedValue;
 import com.GameInterface.Game.Camera;
 import com.GameInterface.Game.Character;
 import com.GameInterface.MathLib.Vector3;
+import com.fox.ModBase;
 import com.fox.PhotoMode.Helper;
 import com.fox.PhotoMode.cmd.EmoteCommand;
 import com.fox.PhotoMode.cmd.FollowCommand;
@@ -10,11 +11,11 @@ import com.fox.PhotoMode.cmd.GotoCommand;
 import com.fox.PhotoMode.cmd.LooksCommand;
 import com.fox.PhotoMode.cmd.OrbitCommand;
 import com.fox.PhotoMode.cmd.VanityCommand;
-/*
+/**
 * ...
 * @author SecretFox
 */
-class com.fox.PhotoMode.PhotoModeShared
+class com.fox.PhotoMode.PhotoModeShared extends ModBase
 {
 	static var m_Window:MovieClip;
 	

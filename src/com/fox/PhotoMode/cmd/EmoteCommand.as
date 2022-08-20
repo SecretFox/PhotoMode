@@ -3,7 +3,7 @@ import com.GameInterface.Game.Character;
 import com.GameInterface.Game.Dynel;
 import com.Utils.ID32;
 import com.fox.PhotoMode.cmd.ChatCommand;
-/*
+/**
 * ...
 * @author SecretFox
 */

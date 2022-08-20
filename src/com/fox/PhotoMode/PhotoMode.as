@@ -1,5 +1,6 @@
+import com.GameInterface.AccountManagement;
 import com.GameInterface.ClientServerPerfTracker;
-import com.GameInterface.UtilsBase;
+import com.GameInterface.WaypointInterface;
 import flash.geom.Point;
 import com.GameInterface.DistributedValue;
 import com.GameInterface.DistributedValueBase;
@@ -13,7 +14,7 @@ import com.Utils.Signal;
 import com.fox.PhotoMode.Helper;
 import com.fox.PhotoMode.PhotoModeShared;
 import mx.utils.Delegate;
-/*
+/**
 * ...
 * @author SecretFox
 */
@@ -27,9 +28,18 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 	   _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft,
 	   _global.Enums.InputCommand.e_InputCommand_Movement_ToggleRunWalk,
 	   _global.Enums.InputCommand.e_InputCommand_Movement_4everForwardToggle,
-	   _global.Enums.InputCommand.e_InputCommand_Toggle_Target_Mode
-	];
-
+	   _global.Enums.InputCommand.e_InputCommand_Toggle_Target_Mode,
+	   _global.Enums.InputCommand.e_InputCommand_ToggleSelectSelf,
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember2,
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember3,
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember4,
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember5,
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember6,
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember7,
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember8,
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember9,
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember10
+   ];
 	private var m_SwfRoot:MovieClip;
 	private var m_MouseTrap:MovieClip;
 
@@ -43,6 +53,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 
 	public function PhotoMode(root)
 	{
+		super();
 		CreateChatCommands();
 		m_SwfRoot = root;
 		SignalKeyPressed = new Signal();
@@ -54,10 +65,12 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 		cmdPhotoModeWindowEnabled.SignalChanged.Connect(PhotoModeWindowChanged, this);
 		playerCharacter = Character.GetClientCharacter();
 		SignalKeyPressed.Connect(HandleInput, this);
+		loaded = true;
 	}
 
 	public function Activate()
 	{
+
 		PhotoModeChanged(cmdPhotoModeEnabled);
 	}
 
@@ -73,12 +86,18 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 		cmdFollow.value = false;
 		cmdVanity.value = false;
 		ClearAll();
+		loaded = false;
 	}
 
 	private function PhotoModeChanged(dv:DistributedValue)
 	{
 		if (dv.GetValue())
 		{
+			if (!loaded)
+			{
+				dv.SetValue(false);
+				return
+			}
 			if (!photoModeActive)
 			{
 				photoModeActive = true;
@@ -90,13 +109,15 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 				MoveToPlayer(true);
 				CharacterBase.ExitReticuleMode();
 				CharacterBase.SignalCharacterEnteredReticuleMode.Connect(SlotReticule, this);
+				WaypointInterface.SignalPlayfieldChanged.Connect(PlayFieldChanged,this)
 				RegisterInput();
 				m_SwfRoot.onEnterFrame = Delegate.create(this, HandleMovement);
-				if (cmdPhotoModeWindowEnabled.GetValue()) PhotoModeWindowChanged(cmdPhotoModeWindowEnabled) 
-				else cmdPhotoModeWindowEnabled.SetValue(true);
+				if (cmdPhotoModeWindowEnabled.GetValue()) PhotoModeWindowChanged(cmdPhotoModeWindowEnabled)
+					else if (DistributedValueBase.GetDValue("PhotoMode_OpenWindow")) cmdPhotoModeWindowEnabled.SetValue(true);
 				clearInterval(frameRateInterval);
-				frameRateInterval = setInterval(Delegate.create(this, GetFramerate), 1000);
 				frameStart = getTimer();
+				frameRateInterval = setInterval(Delegate.create(this, GetFramerate), 1000);
+				setTimeout(Delegate.create(this, GetFramerate), 100);
 			}
 		}
 		else
@@ -108,6 +129,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 				DisableInput();
 				cmdPhotoModeWindowEnabled.SetValue(false);
 				CharacterBase.SignalCharacterEnteredReticuleMode.Disconnect(SlotReticule, this);
+				WaypointInterface.SignalPlayfieldChanged.Disconnect(PlayFieldChanged, this)
 				m_MouseTrap.removeMovieClip();
 				cmdOrbit.value = false;
 				cmdFollow.value = false;
@@ -125,7 +147,20 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			}
 		}
 	}
-	
+
+	private function PlayFieldChanged()
+	{
+		if ( cmdPhotoModeEnabled.GetValue())
+		{
+			if ( AccountManagement.GetInstance().GetLoginState() != _global.Enums.LoginState.e_LoginStateInPlay)
+			{
+				setTimeout(Delegate.create(this, PlayFieldChanged), 100);
+				return;
+			}
+			cmdPhotoModeEnabled.SetValue(false)
+		}
+	}
+
 	private function PhotoModeWindowChanged(dVal:DistributedValue)
 	{
 		if (dVal.GetValue())
@@ -134,7 +169,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			m_Window = m_SwfRoot.attachMovie("WinComp", "m_Window", m_SwfRoot.getNextHighestDepth(),
 				{_x:DistributedValueBase.GetDValue("PhotoMode_x"), _y:DistributedValueBase.GetDValue("PhotoMode_y")});
 			m_Window.addEventListener("dragEnd", this, "SaveWindowPosition");
-			m_Window.SetTitle(" PhotoMode v1.0", "left");
+			m_Window.SetTitle(" PhotoMode v1.1", "left");
 			m_Window.SetPadding(3);
 			m_Window.SetContent("WindowContent");
 			m_Window.ShowCloseButton(true);
@@ -189,17 +224,14 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 
 	static function SendInput(key, action)
 	{
-		!action ? SignalKeyPressed.Emit(key) : SignalKeyPressed.Emit(-key);
+		!action ? SignalKeyPressed.Emit(key) : SignalKeyPressed.Emit( -key);
 	}
 
 	public function onMouseDown(button)
 	{
 		if (Mouse.getTopMostEntity() != m_MouseTrap) return;
+		Selection.setFocus(m_MouseTrap);
 		if (!m_MouseTrap.enabled) return;
-		if (m_Window)
-		{
-			Selection.setFocus(m_MouseTrap);
-		}
 		if (button - 1 != int(!DistributedValueBase.GetDValue("PhotoMode_Invert")))
 		{
 			SignalKeyPressed.Emit(999);
@@ -255,13 +287,60 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 	// 5 esc
 	private function HandleInput(dir)
 	{
+		var emote:String;
+		var num = 1;
+		if Key.isDown(Key.SHIFT) num += 5;
+		switch (dir) // Has to be negative to detect Shift+ keys
+		{
+			case -_global.Enums.InputCommand.e_InputCommand_ToggleSelectSelf:
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote" + num);
+				break;
+			case -_global.Enums.InputCommand.e_InputCommand_SelectTeammember2:
+				num += 1;
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote" + num);
+				break;
+			case -_global.Enums.InputCommand.e_InputCommand_SelectTeammember3:
+				num += 2;
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote" + num);
+				break;
+			case -_global.Enums.InputCommand.e_InputCommand_SelectTeammember4:
+				num += 3;
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote" + num);
+				break;
+			case -_global.Enums.InputCommand.e_InputCommand_SelectTeammember5:
+				num += 4;
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote" + num);
+				break;
+			// these may not trigger
+			case -_global.Enums.InputCommand.e_InputCommand_SelectTeammember6:
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote6");
+				break;
+			case -_global.Enums.InputCommand.e_InputCommand_SelectTeammember7:
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote7");
+				break;
+			case -_global.Enums.InputCommand.e_InputCommand_SelectTeammember8:
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote8");
+				break;
+			case -_global.Enums.InputCommand.e_InputCommand_SelectTeammember9:
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote9");
+				break;
+			case -_global.Enums.InputCommand.e_InputCommand_SelectTeammember10:
+				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote10");
+				break;
+		}
+		if ( emote )
+		{
+			cmdEmote.value = emote;
+			return
+		}
+
 		switch (Math.abs(dir))
 		{
 			case _global.Enums.InputCommand.e_InputCommand_Toggle_Target_Mode:
 				if (dir > 0)
 				{
 					m_MouseTrap.enabled = false;
-					SendInput( -999);
+					SendInput(-999);
 				}
 				else
 				{
@@ -372,17 +451,17 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 					case 999:
 						var mousePosition = Mouse.getPosition();
 						var middlePoint:Point = new Point(Stage.width / 2, Stage.height / 2);
-						
+
 						var xShift = (mousePosition.x - middlePoint.x) * currentFoV / 60 * framePanMultiplier;
 						xShift > 0 ? orbitDirection = 1 : orbitDirection = 0;
 						rotation += xShift / 8000;
-						
+
 						var yShift = (middlePoint.y - mousePosition.y) * currentFoV / 60 * frameRateMultiplier;
 						var amount = yShift / 14000;
 						adj = amount;
 						var newAdj = adj + adj * Math.abs(yOffset);
 						yOffset -= newAdj;
-						
+
 						rotating = true;
 						break;
 					case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
@@ -438,23 +517,22 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 						var xShift = (mousePosition.x - middlePoint.x) * currentFoV / 60;
 						var currentRotation = Helper.GetConvertedRotation(Camera.m_AngleY);
 						currentRotation = Helper.ClampRotation(currentRotation + xShift / 28000  * framePanMultiplier);  // different multipliers on purpose
-						
+
 						var yShift = (middlePoint.y - mousePosition.y) * currentFoV / 60;
 						adj = yShift / 22000 * frameRateMultiplier; // different multipliers on purpose
 						var newAdj = adj + adj * Math.abs(lookYOffset); // i forgot what this does,but it makes panning up/down feel better
 						lookYOffset += newAdj;
 						lookYOffset = Helper.LimitValue( -2, 2, lookYOffset);
 						lookPosition.y += lookYOffset;
-						
+
 						cameraPosition.x += (1 + distanceOffset) * -Math.sin(rotation);
 						cameraPosition.z += (1 + distanceOffset) * -Math.cos(rotation);
 						var converted = Helper.ClampRotation(rotation + Math.PI / 2);
 						cameraPosition.x += xOffset * -Math.sin(converted);
 						cameraPosition.z += xOffset * -Math.cos(converted);
-						
-						lookPosition.x = cameraPosition.x + (2 + distanceOffset) * Math.sin(currentRotation)
-						lookPosition.z = cameraPosition.z + (2 + distanceOffset) * Math.cos(currentRotation)
-						
+
+						lookPosition.x = cameraPosition.x + (2 + distanceOffset) * Math.sin(currentRotation);
+						lookPosition.z = cameraPosition.z + (2 + distanceOffset) * Math.cos(currentRotation);
 						rotated = true;
 						break;
 					case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
@@ -484,7 +562,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 				cameraPosition.x += xOffset * -Math.sin(converted);
 				cameraPosition.z += xOffset * -Math.cos(converted);
 				cameraPosition = Helper.GetSmoothedMovement(cameraPosition, Camera.m_Pos, 0.05);
-				lookPosition.x += (2 + distanceOffset) * Math.sin(rotation)
+				lookPosition.x += (2 + distanceOffset) * Math.sin(rotation);
 				lookPosition.z += (2 + distanceOffset) * Math.cos(rotation)
 			}
 		}
@@ -524,11 +602,11 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 						var currentRotation = Helper.GetConvertedRotation(Camera.m_AngleY);
 						var old = currentRotation;
 						currentRotation = Helper.ClampRotation(currentRotation + xShift / 32000);
-						
+
 						var yShift = (middlePoint.y - mousePosition.y) * currentFoV / 60 * frameRateMultiplier;
 						lookYOffset += yShift / 14000;
 						lookYOffset = Helper.LimitValue( -2, 2, lookYOffset);
-						
+
 						cameraPosition = Helper.GetSmoothedMovement(cameraPosition, Camera.m_Pos, 0.05);
 						lookPosition = new Vector3(
 							cameraPosition.x + (1 + distanceOffset) * Math.sin(currentRotation),
@@ -631,14 +709,14 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 						var middlePoint:Point = new Point(Stage.width / 2, Stage.height / 2);
 						var xShift = (mousePosition.x - middlePoint.x) * currentFoV / 60;
 						rotation = Helper.ClampRotation(rotation + xShift / 24000 * framePanMultiplier); // different multipliers on purpose
-						
+
 						var yShift = (middlePoint.y - mousePosition.y) * currentFoV / 60;
 						adj = yShift / 32000 * frameRateMultiplier; // different multipliers on purpose
 						var newAdj = adj + adj * Math.abs(lookYOffset); // i forgot what this does,but it makes panning up/down feel better
 						lookYOffset += newAdj;
 						lookYOffset = Helper.LimitValue( -2, 2, lookYOffset);
 						lookPosition.y = cameraPosition.y + lookYOffset;
-						
+
 						lookPosition.x = cameraPosition.x + 1 * Math.sin(rotation);
 						lookPosition.z = cameraPosition.z + 1 * Math.cos(rotation);
 						break;

@@ -6,7 +6,7 @@ import com.Utils.ID32;
 import com.fox.PhotoMode.Helper;
 import com.fox.PhotoMode.cmd.ChatCommand;
 import mx.utils.Delegate;
-/*
+/**
 * ...
 * @author SecretFox
 */

@@ -8,7 +8,7 @@ import com.Utils.Signal;
 import com.Utils.StringUtils;
 import com.fox.PhotoMode.Helper;
 import com.fox.PhotoMode.PhotoModeShared;
-/*
+/**
 * ...
 * @author SecretFox
 */
@@ -135,5 +135,23 @@ class com.fox.PhotoMode.cmd.ChatCommand extends PhotoModeShared
 	static function RandomNumber(min, max, dec)
 	{
 		return Helper.RoundTo(min + Math.random()* (max - min), dec);
+	}
+	
+	
+	static function isInPvp()
+	{
+		switch(Character.GetClientCharacter().GetPlayfieldID())
+		{
+			case 5820:// - el dorado
+			case 5830:// - shambala
+			case 5840:// - stone henge
+			case 34171:// - fusang projects
+			case 7020:// - london fightclub
+			case 7230:// - ny fightclub
+			case 5811:// - seoul fightclub
+				return true;
+			default:
+				return false;
+		}
 	}
 }

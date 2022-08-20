@@ -4,7 +4,7 @@ import com.GameInterface.MathLib.Vector3;
 import com.GameInterface.UtilsBase;
 import com.fox.PhotoMode.Helper;
 import com.fox.PhotoMode.cmd.ChatCommand;
-/*
+/**
 * ...
 * @author SecretFox
 */

@@ -8,7 +8,10 @@ import gfx.controls.CheckBox;
 import gfx.controls.DropdownMenu;
 import gfx.controls.TextInput;
 import mx.utils.Delegate;
-
+/**
+* ...
+* @author SecretFox
+*/
 class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 {
 	private var m_DropDown:DropdownMenu;
@@ -18,6 +21,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 	private var m_Current:Button;
 	private var m_Input:TextInput;
 	private var m_Invert:CheckBox;
+	private var m_OpenWindow:CheckBox;
 	private var m_Feedback:TextField;
 	private var m_Hitbox:MovieClip;
 	private var keylistener:Object;
@@ -44,20 +48,19 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		m_DropDown.rowCount = data.length;
 		m_DropDown.selectedIndex = 0;
 		m_DropDown.addEventListener("change", this, "ModeSelected");
-		m_DropDown.addEventListener("click", this, "SetFocus");
+		m_DropDown.addEventListener("click", this, "RestoreFocus");
 		m_Invert.selected = DistributedValueBase.GetDValue("PhotoMode_Invert");
 		m_Invert.addEventListener("click", this, "InvertChanged");
-		
+		m_OpenWindow.selected = DistributedValueBase.GetDValue("PhotoMode_OpenWindow");
+		m_OpenWindow.addEventListener("click", this, "WindowChanged");
 		m_Self.addEventListener("click", this, "HandleButtonPress");
 		m_Target.addEventListener("click", this, "HandleButtonPress");
 		m_Random.addEventListener("click", this, "HandleButtonPress");
 		m_Current.addEventListener("click", this, "HandleButtonPress");
-		
 		m_Input.addEventListener("focusIn", this, "FocusChanged");
 		m_Input.addEventListener("focusOut", this, "FocusChanged");
-		m_Hitbox.onPress = Delegate.create(this, SetFocus);
+		m_Hitbox.onPress = Delegate.create(this, RestoreFocus);
 		m_Feedback.text = ""
-		
 		ModeSelected();
 		Layout();
 	}
@@ -97,8 +100,9 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		m_Feedback.text = Math.round(pos.x) + ", " + Math.round(pos.y) + ", " + Math.round(pos.z);
 	}
 	
-	private function SetFocus()
+	private function RestoreFocus()
 	{
+		_parent._parent.m_MouseTrap.enabled = true;
 		Selection.setFocus(_parent._parent.m_MouseTrap);
 	}
 	
@@ -119,7 +123,11 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		if (Key.getCode() == Key.ENTER)
 		{
 			HandleButtonPress({target:m_Input, button:0});
-			SetFocus();
+			RestoreFocus();
+		}
+		else if (Key.getCode() == Key.ALT || Key.getCode() == Key.ESCAPE)
+		{
+			RestoreFocus();
 		}
 	}
 	
@@ -151,18 +159,23 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 			{
 				if ( target )
 				{
-					
 					DistributedValueBase.SetDValue(target, value);
 				}
 			}
 		}
-		SetFocus();
+		RestoreFocus();
 	}
 	
 	private function InvertChanged()
 	{
 		DistributedValueBase.SetDValue("PhotoMode_Invert", !DistributedValueBase.GetDValue("PhotoMode_Invert"));
-		SetFocus();
+		RestoreFocus();
+	}
+	
+	private function WindowChanged()
+	{
+		DistributedValueBase.SetDValue("PhotoMode_OpenWindow", !DistributedValueBase.GetDValue("PhotoMode_OpenWindow"));
+		RestoreFocus();
 	}
 	
 	private function ModeSelected()
@@ -222,7 +235,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 				UpdatePos();
 				break
 		}
-		SetFocus();
+		RestoreFocus();
 		Layout();
 	}
 	

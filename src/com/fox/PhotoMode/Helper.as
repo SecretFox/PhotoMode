@@ -2,7 +2,10 @@ import com.GameInterface.Game.TargetingInterface;
 import com.GameInterface.MathLib.Vector3;
 import com.Utils.ID32;
 import flash.geom.Point;
-
+/**
+* ...
+* @author SecretFox
+*/
 class com.fox.PhotoMode.Helper
 {
 

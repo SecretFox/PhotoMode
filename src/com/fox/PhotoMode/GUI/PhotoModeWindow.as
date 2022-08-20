@@ -3,7 +3,7 @@ import com.GameInterface.DistributedValueBase;
 import com.fox.Utils.Common;
 import flash.geom.Point;
 import mx.utils.Delegate;
-/*
+/**
 * ...
 * @author SecretFox
 */

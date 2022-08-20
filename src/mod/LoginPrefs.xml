@@ -3,7 +3,18 @@
     <Value name="PhotoModeIcon" value="true" />
 	<Value name="PhotoMode" value="true" />
     <Value name="PhotoMode_Invert" value="true" />
+	<Value name="PhotoMode_OpenWindow" value="true" />
 	<Value name="PhotoMode_x" value="20" />
 	<Value name="PhotoMode_y" value="40" />
+	<Value name="PhotoMode_StoreEmote1" value="false" />
+	<Value name="PhotoMode_StoreEmote2" value="false" />
+	<Value name="PhotoMode_StoreEmote3" value="false" />
+	<Value name="PhotoMode_StoreEmote4" value="false" />
+	<Value name="PhotoMode_StoreEmote5" value="false" />
+	<Value name="PhotoMode_StoreEmote6" value="false" />
+	<Value name="PhotoMode_StoreEmote7" value="false" />
+	<Value name="PhotoMode_StoreEmote8" value="false" />
+	<Value name="PhotoMode_StoreEmote9" value="false" />
+	<Value name="PhotoMode_StoreEmote10" value="false" />
     <Archive name="PhotoMode_Cfg" />
 </Root>

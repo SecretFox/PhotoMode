@@ -5,7 +5,7 @@ import com.Utils.GlobalSignal;
 import com.fox.Utils.Common;
 import flash.geom.Point;
 import mx.utils.Delegate;
-/*
+/**
 * ...
 * @author SecretFox
 */

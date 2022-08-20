@@ -6,7 +6,7 @@ import com.GameInterface.Game.Dynel;
 import com.Utils.ID32;
 import com.fox.PhotoMode.cmd.ChatCommand;
 import mx.utils.Delegate;
-/*
+/**
 * ...
 * @author SecretFox
 */
@@ -50,13 +50,17 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 			if (isNaN(Number(value[0]))) continue;
 			target.AddLooksPackage(Number(value[0]), Number(value[1]));
 		}
-	}
-	
+	}	
 	
 	// 1, player, target,all, or omitted
 	// 2, lookspacakges,configuration id
 	private function SlotChanged(dv:DistributedValue)
 	{
+		if ( isInPvp())
+		{
+			dv.SetValue(false);
+			return;
+		}
 		var data = dv.GetValue().split(",");
 		var f = Delegate.create(this, ApplyLooksPackages);
 		if (data)
