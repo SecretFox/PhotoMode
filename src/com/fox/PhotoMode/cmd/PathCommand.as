@@ -32,7 +32,7 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 	private var movementEasing:Function
 	private var lookEasing:Function;
 	private var fovEasing:Function;
-	private var enabling:Boolean;
+	public var Enabling:Boolean;
 
 	public function PathCommand(name)
 	{
@@ -44,6 +44,7 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 	public function Disable()
 	{
 		Pathing = false;
+		Enabling = false;
 		if (d_val.GetValue()) d_val.SetValue(false);
 		if (photoModeActive) m_SwfRoot.onEnterFrame = Delegate.create(Mod, Mod.HandleMovement);
 		cameraPaths = [];
@@ -255,7 +256,7 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 	
 	private function ReCall(val)
 	{
-		enabling = false;
+		Enabling = false;
 		d_val.SetValue(val);
 	}
 
@@ -264,11 +265,11 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 		var val:String = dv.GetValue();
 		if (val)
 		{
-			if ( !photoModeActive || enabling ) 
+			if ( !photoModeActive || Enabling ) 
 			{
 				setTimeout(Delegate.create(this, ReCall), 1000, val);
 				cmdPhotoModeEnabled.SetValue(true);
-				enabling = true;
+				Enabling = true;
 				return;
 			}
 			clearTimeout(popTimeout);
@@ -284,6 +285,7 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 				currentFov = 60;
 				Camera.SetFOV(60 * Math.PI / 180);
 			}
+			Pathing = true;
 			cameraPaths.push(val);
 			DisableOthers(this);
 			popTimeout = setTimeout(Delegate.create(this, PopPath), 50);

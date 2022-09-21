@@ -35,7 +35,8 @@ class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 		if (photoModeActive &&
 			!cmdFollow.value &&
 			!cmdVanity.value &&
-			!cmdPath.Pathing)
+			!cmdPath.Pathing &&
+			!cmdPath.Enabling)
 		{
 			ClearControls();
 			MoveToPlayer(true);
