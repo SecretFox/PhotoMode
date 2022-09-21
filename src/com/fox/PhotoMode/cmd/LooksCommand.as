@@ -126,6 +126,7 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 				mode2 == "keep" ||
 				mode2 == "clear" ||
 				mode2 == "hide" ||
+				mode2 == "restore" ||
 				!isNaN(mode))
 			{
 				data = data.join(",");
@@ -138,6 +139,11 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 					setTimeout(Delegate.create(this, SetInvisible), 20);
 					setTimeout(Delegate.create(this, ResetLooks), 100, pairs.slice(1).join(";"));
 					return;
+				}
+				else if (pairs[0].toLowerCase() == "restore")
+				{
+					ResetClothes();
+					pairs.shift();
 				}
 				else if (pairs[0].toLowerCase() == "keep")
 				{

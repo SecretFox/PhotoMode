@@ -81,7 +81,24 @@ class com.fox.PhotoMode.GUI.Icon
 	
 	private function onPressAux()
 	{
+		if (!_global.com.GameInterface.AgentSystem && Key.isDown(Key.CONTROL))
+		{
+			m_Icon.startDrag();
+			return;
+		}
 		dvalPhotoModeWindow.SetValue(!dvalPhotoModeWindow.GetValue());
+	}
+	
+	private function onReleaseAux()
+	{
+		if (!_global.com.GameInterface.AgentSystem)
+		{
+			m_Icon.stopDrag();
+			var pos:Point = Common.getOnScreen(this.m_Icon);
+			m_Icon._x = pos.x;
+			m_Icon._y = pos.y;
+			m_Pos = pos;
+		}
 	}
 	
 	private function GuiEditToggled(state)
@@ -90,6 +107,8 @@ class com.fox.PhotoMode.GUI.Icon
 		{
 			m_Icon.onPress = Delegate.create(this, onPress);
 			m_Icon.onPressAux = Delegate.create(this, onPressAux);
+			m_Icon.onReleaseAux = Delegate.create(this, onReleaseAux);
+			m_Icon.onReleaseOutsideAux = Delegate.create(this, onReleaseAux);
 			m_Icon._x = m_Pos.x;
 			m_Icon._y = m_Pos.y;
 		}

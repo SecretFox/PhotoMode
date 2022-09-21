@@ -81,24 +81,29 @@ class com.fox.PhotoMode.cmd.ChatCommand extends PhotoModeShared
 	static function ToVector(value, temp)
 	{
 		var retVal:Vector3;
-		var loc:Array = value.split(",");
-		if (loc.length == 1) loc = value.split(" ");
-		if (loc.length > 1)
+		var location:Array;
+		if ( typeof(value) == "string")
 		{
-			if (loc.length == 2)
+			location = value.split(",");
+			if (location.length == 1) location = value.split(" ");
+		} 
+		else location = value;
+		if (location.length > 1)
+		{
+			if (location.length == 2)
 			{
-				var z = loc.pop();
-				if (cmdPhotoModeEnabled.GetValue())
+				var z = location.pop();
+				if (photoModeActive)
 				{
-					loc.push(string(Camera.m_Pos.y));
+					location.push(string(Camera.m_Pos.y));
 				}
 				else
 				{
-					loc.push(string(playerCharacter.GetPosition().y));
+					location.push(string(playerCharacter.GetPosition().y));
 				}
-				loc.push(z);
+				location.push(z);
 			}
-			return new Vector3(Number(StringUtils.Strip(loc[0])), Number(StringUtils.Strip(loc[1])), Number(StringUtils.Strip(loc[2])));
+			return new Vector3(Number(StringUtils.Strip(location[0])), Number(StringUtils.Strip(location[1])), Number(StringUtils.Strip(location[2])));
 		}
 		else if (temp) return temp;
 		else return Camera.m_Pos;

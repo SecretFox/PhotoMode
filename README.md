@@ -62,7 +62,11 @@ Don't forget the quotes (unless using true/false value)
 * `/option PhotoMode_Vanity "target/random/playerName/self"`, can also be accessed from the command window
 * `/option PhotoMode_Window true/false` Shows/Hides command window. Same as right clicking the icon
 * `/option PhotoMode_Emote "all/playername/target,EmoteName"` Plays client sided emote, for list of emotes see [here](https://github.com/super-jenius/Untold/blob/master/fox/Animation.xml)
-* `/option PhotoMode_StoreEmote1-10 "emoteString"` Stores emote string for PhotoMode_Emote command. Stored emote can be called in PhotoMode by pressing Select Team Member 1-10 keybinds
+* `/option PhotoMode_StoreEmote1-10 "emoteString"` Stores emote string for PhotoMode_Emote command. Stored emote can be called in PhotoMode by pressing Select Team Member 1-10 keybinds  
+* `/option PhotoMode_MovementSpeed 1.0` Movement speed  
+* `/option PhotoMode_PanSpeedX 1.0` Camera panning speed on X axis  
+* `/option PhotoMode_PanSpeedY 1.0` Camera panning speed on Y axis  
+* `/option PhotoMode_ChatOnAlt true/false` By default holding Alt will allow player to access chat, but this also disables camera panning which can be an issue if tab gets stuck due to alt tabbing  
 
 
 ### Install

@@ -1,5 +1,6 @@
 import com.Components.WinComp;
 import com.GameInterface.DistributedValueBase;
+import com.fox.PhotoMode.GUI.WindowContent;
 import com.fox.Utils.Common;
 import flash.geom.Point;
 import mx.utils.Delegate;
@@ -19,6 +20,7 @@ class com.fox.PhotoMode.GUI.PhotoModeWindow extends WinComp
 	public function SlotCloseWindow()
 	{
 		DistributedValueBase.SetDValue("PhotoMode_Window", false);
+		WindowContent(GetContent()).Clear();
 	}
 	
 	public function MoveDragReleaseHandler() 

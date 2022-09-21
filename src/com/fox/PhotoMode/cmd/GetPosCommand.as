@@ -22,13 +22,16 @@ class com.fox.PhotoMode.cmd.GetPosCommand extends ChatCommand
 		if (dv.GetValue())
 		{
 			var pos:Vector3;
-			if (cmdPhotoModeEnabled.GetValue())
+			if (photoModeActive)
 			{
 				pos = Camera.m_Pos;
 				UtilsBase.PrintChatText("Current camera position: " + Helper.RoundTo(pos.x, 2) + ", " + Helper.RoundTo(pos.y, 2) + ", " + Helper.RoundTo(pos.z, 2));
 			}
-			pos = playerCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
-			UtilsBase.PrintChatText("Current player position: " + Helper.RoundTo(pos.x, 2) + ", " + Helper.RoundTo(pos.y, 2) + ", " + Helper.RoundTo(pos.z, 2));
+			else
+			{
+				pos = playerCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
+				UtilsBase.PrintChatText("Current player position: " + Helper.RoundTo(pos.x, 2) + ", " + Helper.RoundTo(pos.y, 2) + ", " + Helper.RoundTo(pos.z, 2));
+			}
 			dv.SetValue(false);
 		}
 	}

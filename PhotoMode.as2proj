@@ -52,6 +52,11 @@
   <!-- Executed after build -->
   <postBuildCommand alwaysRun="False">xcopy "$(ProjectDir)\bin\*.*" "H:\Secret World Legends\Data\Gui\Custom\Flash\PhotoMode\*.*" /e /y
 xcopy "$(ProjectDir)\src\mod\*.*" "H:\Secret World Legends\Data\Gui\Custom\Flash\PhotoMode\*.*" /e /y
+xcopy "$(ProjectDir)\CameraPaths\scripts\*.*" "H:\Secret World Legends\scripts\*.*" /e /y
+
+xcopy "$(ProjectDir)\bin\*.*" "I:\The Secret World\Data\Gui\Customized\Flash\PhotoMode\*.*" /e /y
+xcopy "$(ProjectDir)\src\mod\*.*" "I:\The Secret World\Data\Gui\Customized\Flash\PhotoMode\*.*" /e /y
+xcopy "$(ProjectDir)\CameraPaths\scripts\*.*" "I:\The Secret World\scripts\*.*" /e /y
 
 xcopy "$(ProjectDir)\bin\*.*" "./deployment/PhotoMode/*.*" /e /y
 xcopy "$(ProjectDir)\src\mod\*.*" "./deployment/PhotoMode/*.*" /e /y</postBuildCommand>

@@ -32,9 +32,10 @@ class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 		orbitCharacter = undefined;
 		yOffset = 0;
 		
-		if (cmdPhotoModeEnabled.GetValue() &&
+		if (photoModeActive &&
 			!cmdFollow.value &&
-			!cmdVanity.value)
+			!cmdVanity.value &&
+			!cmdPath.Pathing)
 		{
 			ClearControls();
 			MoveToPlayer(true);
@@ -72,7 +73,7 @@ class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 		if (!orbitPosition) lookPosition = orbitCharacter.GetPosition(/*_global.Enums.AttractorPlace.e_CameraAim?*/);
 		else lookPosition = new Vector3(orbitPosition.x, orbitPosition.y, orbitPosition.z);
 		Camera.PlaceCamera(newPos.x, newPos.y, newPos.z, lookPosition.x, lookPosition.y, lookPosition.z, 0, 1, 0);
-		Camera.SetFOV(currentFoV* 2* Math.PI / 360);
+		Camera.SetFOV(currentFov * Math.PI / 180);
 		Camera.m_Pos = newPos;
 		if (!orbitPosition) Camera.m_AngleY = orbitCharacter.GetRotation();
 		else Camera.m_AngleY = orgRot;
@@ -83,7 +84,7 @@ class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 		var value:String = dv.GetValue();
 		if (value)
 		{
-			if (!cmdPhotoModeEnabled.GetValue())
+			if (!photoModeActive)
 			{
 				cmdPhotoModeEnabled.SetValue(true);
 				// store current camera position before changing to PhotoMode, otherwise it will start orbiting the new location

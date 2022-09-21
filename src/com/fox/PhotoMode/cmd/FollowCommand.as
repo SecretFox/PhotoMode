@@ -30,9 +30,10 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 		movementLocked = false;
 		followCharacter = undefined;
 		yOffset = 0;
-		if (cmdPhotoModeEnabled.GetValue() &&
+		if (photoModeActive &&
 			!cmdOrbit.value &&
-			!cmdVanity.value)
+			!cmdVanity.value &&
+			!cmdPath.Pathing)
 		{
 			ClearControls();
 			MoveToPlayer(true);
@@ -64,7 +65,7 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 		Camera.PlaceCamera(cameraPosition.x, cameraPosition.y, cameraPosition.z, lookPosition.x, lookPosition.y - 0.1 /*tilt slightly downwards*/, lookPosition.z, 0, 1, 0);
 		if (firstRun)
 		{
-			Camera.SetFOV(currentFoV* 2* Math.PI / 360);
+			Camera.SetFOV(currentFov* 2* Math.PI / 360);
 			Camera.m_Pos = cameraPosition;
 			Camera.m_AngleY = followCharacter.GetRotation();
 		}
@@ -76,9 +77,8 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 		var value = dv.GetValue();
 		if (value)
 		{
-			if (!cmdPhotoModeEnabled.GetValue())
+			if (!photoModeActive)
 			{
-				dv.SetValue(false);
 				cmdPhotoModeEnabled.SetValue(true);
 				setTimeout(Delegate.create(this, SlotChanged), 500, dv);
 				return;

@@ -16,5 +16,9 @@
 	<Value name="PhotoMode_StoreEmote8" value="false" />
 	<Value name="PhotoMode_StoreEmote9" value="false" />
 	<Value name="PhotoMode_StoreEmote10" value="false" />
+	<Value name="PhotoMode_MovementSpeed" value="1" />
+	<Value name="PhotoMode_PanSpeedX" value="1" />
+	<Value name="PhotoMode_PanSpeedY" value="1" />
+	<Value name="PhotoMode_ChatOnAlt" value="true" />
     <Archive name="PhotoMode_Cfg" />
 </Root>

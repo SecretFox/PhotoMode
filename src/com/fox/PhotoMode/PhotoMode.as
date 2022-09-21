@@ -1,5 +1,4 @@
 import com.GameInterface.AccountManagement;
-import com.GameInterface.ClientServerPerfTracker;
 import com.GameInterface.WaypointInterface;
 import flash.geom.Point;
 import com.GameInterface.DistributedValue;
@@ -21,39 +20,49 @@ import mx.utils.Delegate;
 class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 {
 	static var SignalKeyPressed:Signal;
-	static var inputKeys = [
-	   _global.Enums.InputCommand.e_InputCommand_Movement_Forward,
-	   _global.Enums.InputCommand.e_InputCommand_Movement_Backward,
-	   _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight,
-	   _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft,
-	   _global.Enums.InputCommand.e_InputCommand_Movement_ToggleRunWalk,
-	   _global.Enums.InputCommand.e_InputCommand_Movement_4everForwardToggle,
-	   _global.Enums.InputCommand.e_InputCommand_Toggle_Target_Mode,
-	   _global.Enums.InputCommand.e_InputCommand_ToggleSelectSelf,
-	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember2,
-	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember3,
-	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember4,
-	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember5,
-	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember6,
-	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember7,
-	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember8,
-	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember9,
-	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember10
-   ];
-	private var m_SwfRoot:MovieClip;
+	private var lastFrame:Number;
+	static var inputKeys:Array = [
+	   _global.Enums.InputCommand.e_InputCommand_Movement_Forward, //0
+	   _global.Enums.InputCommand.e_InputCommand_Movement_Backward, //1
+	   _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight, //2
+	   _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft, //3
+	   _global.Enums.InputCommand.e_InputCommand_Movement_ToggleRunWalk, //4
+	   _global.Enums.InputCommand.e_InputCommand_Movement_4everForwardToggle, //5
+	   _global.Enums.InputCommand.e_InputCommand_Toggle_Target_Mode, //6
+	   _global.Enums.InputCommand.e_InputCommand_ToggleSelectSelf, //7
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember2, //8
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember3, //9
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember4, //10
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember5, //11
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember6, //12
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember7, //13
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember8, //14
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember9, //15
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember10, //16
+	   _global.Enums.InputCommand.e_InputCommand_SelectTeammember10, //17
+	   _global.Enums.InputCommand.e_InputCommand_Use_Gadget, //18
+	   150 // vanity camera, 19
+	];
 	private var m_MouseTrap:MovieClip;
 
 	static function main(swfRoot:MovieClip )
 	{
-		var mod = new PhotoMode(swfRoot);
-		swfRoot.onLoad = function() { mod.Load()};
-		swfRoot.onUnload = function() { mod.Unload()};
-		swfRoot.OnModuleActivated = function() { mod.Activate()};
+		Mod = new PhotoMode(swfRoot);
+		swfRoot.onLoad = function() { PhotoModeShared.Mod.Load()};
+		swfRoot.onUnload = function() { PhotoModeShared.Mod.Unload()};
+		swfRoot.OnModuleActivated = function() { PhotoModeShared.Mod.Activate()};
 	}
 
 	public function PhotoMode(root)
 	{
-		super();
+		if ( !_global.com.GameInterface.AgentSystem) // TSW Check
+		{
+			inputKeys[2] = _global.Enums.InputCommand.e_InputCommand_Movement_TurnRight;
+			inputKeys[3] = _global.Enums.InputCommand.e_InputCommand_Movement_TurnLeft;
+			inputKeys[6] = _global.Enums.InputCommand.e_InputCommand_Target_DefensiveSelf;
+			inputKeys[19] = _global.Enums.InputCommand.e_InputCommand_Toggle_Target_Mode;
+			inputKeys[18] = _global.Enums.InputCommand.e_InputCommand_Movement_Dodge
+		}
 		CreateChatCommands();
 		m_SwfRoot = root;
 		SignalKeyPressed = new Signal();
@@ -61,45 +70,75 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 
 	public function Load()
 	{
+		optPhotoModeWindowEnabled.SetValue(false);
 		cmdPhotoModeEnabled.SignalChanged.Connect(PhotoModeChanged, this);
-		cmdPhotoModeWindowEnabled.SignalChanged.Connect(PhotoModeWindowChanged, this);
+		optPhotoModeWindowEnabled.SignalChanged.Connect(PhotoModeWindowChanged, this);
 		playerCharacter = Character.GetClientCharacter();
 		SignalKeyPressed.Connect(HandleInput, this);
-		loaded = true;
+		optMovementSpeed.SignalChanged.Connect(SettingChanged, this);
+		optPanX.SignalChanged.Connect(SettingChanged, this);
+		optPanY.SignalChanged.Connect(SettingChanged, this);
+		optChatOnAlt.SignalChanged.Connect(SettingChanged, this);
+		SettingChanged(optMovementSpeed);
+		SettingChanged(optPanX);
+		SettingChanged(optPanY);
+	}
+	
+	public function SettingChanged(dv:DistributedValue)
+	{
+		switch(dv.GetName())
+		{
+			case "PhotoMode_MovementSpeed":
+				movementSpeed = dv.GetValue() / 100;
+				if ( m_Window ) m_Window.GetContent().m_Speed.text = dv.GetValue();
+				break;
+			case "PhotoMode_PanSpeedX":
+				panSpeedX = dv.GetValue() / 300000;
+				if ( m_Window ) m_Window.GetContent().m_PanX.text = dv.GetValue();
+				break;
+			case "PhotoMode_PanSpeedY":
+				PanSpeedY = dv.GetValue() / 300000;
+				if ( m_Window ) m_Window.GetContent().m_PanY.text = dv.GetValue();
+				break;
+			case "PhotoMode_ChatOnAlt":
+				if (m_MouseTrap)
+				{
+					m_MouseTrap.enabled = true;
+				}
+				if ( m_Window ) m_Window.GetContent().m_Alt.selected = dv.GetValue();
+		}
 	}
 
 	public function Activate()
 	{
-
 		PhotoModeChanged(cmdPhotoModeEnabled);
 	}
 
 	public function Unload()
 	{
-		cmdPhotoModeWindowEnabled.SignalChanged.Disconnect(PhotoModeWindowChanged, this);
+		optPhotoModeWindowEnabled.SignalChanged.Disconnect(PhotoModeWindowChanged, this);
 		m_SwfRoot.onEnterFrame = undefined;
 		DisableInput();
 		Mouse.removeListener(this);
 		CharacterBase.SignalCharacterEnteredReticuleMode.Disconnect(SlotReticule, this);
+		optMovementSpeed.SignalChanged.Disconnect(SettingChanged, this);
+		optPanX.SignalChanged.Disconnect(SettingChanged, this);
+		optPanY.SignalChanged.Disconnect(SettingChanged, this);
+		optChatOnAlt.SignalChanged.Disconnect(SettingChanged, this);
 		m_MouseTrap.removeMovieClip();
 		cmdOrbit.value = false;
 		cmdFollow.value = false;
 		cmdVanity.value = false;
 		ClearAll();
-		loaded = false;
 	}
 
 	private function PhotoModeChanged(dv:DistributedValue)
 	{
 		if (dv.GetValue())
 		{
-			if (!loaded)
-			{
-				dv.SetValue(false);
-				return
-			}
 			if (!photoModeActive)
 			{
+				cmdPath.Disable();
 				photoModeActive = true;
 				ClearAll();
 				Camera.RequestCameraPosRotUpdates(true);
@@ -111,65 +150,59 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 				CharacterBase.SignalCharacterEnteredReticuleMode.Connect(SlotReticule, this);
 				WaypointInterface.SignalPlayfieldChanged.Connect(PlayFieldChanged,this)
 				RegisterInput();
+				lastFrame = getTimer();
 				m_SwfRoot.onEnterFrame = Delegate.create(this, HandleMovement);
-				if (cmdPhotoModeWindowEnabled.GetValue()) PhotoModeWindowChanged(cmdPhotoModeWindowEnabled)
-					else if (DistributedValueBase.GetDValue("PhotoMode_OpenWindow")) cmdPhotoModeWindowEnabled.SetValue(true);
-				clearInterval(frameRateInterval);
-				frameStart = getTimer();
-				frameRateInterval = setInterval(Delegate.create(this, GetFramerate), 1000);
-				setTimeout(Delegate.create(this, GetFramerate), 100);
+				if (optPhotoModeWindowEnabled.GetValue()) PhotoModeWindowChanged(optPhotoModeWindowEnabled);
+				else if (DistributedValueBase.GetDValue("PhotoMode_OpenWindow")) optPhotoModeWindowEnabled.SetValue(true);
 			}
 		}
-		else
+		else if (photoModeActive)
 		{
-			clearInterval(frameRateInterval);
-			if (photoModeActive)
-			{
-				m_SwfRoot.onEnterFrame = undefined;
-				DisableInput();
-				cmdPhotoModeWindowEnabled.SetValue(false);
-				CharacterBase.SignalCharacterEnteredReticuleMode.Disconnect(SlotReticule, this);
-				WaypointInterface.SignalPlayfieldChanged.Disconnect(PlayFieldChanged, this)
-				m_MouseTrap.removeMovieClip();
-				cmdOrbit.value = false;
-				cmdFollow.value = false;
-				cmdVanity.value = false;
-				ClearAll();
-				DistributedValueBase.SetDValue("CharacterCreationActive", true);
-				Camera.RequestCameraPosRotUpdates(false);
-				MoveToPlayer();
-				setTimeout(Delegate.create(this, DisableCharacterCreation), 500);
-				photoModeActive = false;
-			}
+			photoModeActive = false;
+			m_SwfRoot.onEnterFrame = undefined;
+			DisableInput();
+			optPhotoModeWindowEnabled.SetValue(false);
+			CharacterBase.SignalCharacterEnteredReticuleMode.Disconnect(SlotReticule, this);
+			WaypointInterface.SignalPlayfieldChanged.Disconnect(PlayFieldChanged, this)
+			m_MouseTrap.removeMovieClip();
+			cmdOrbit.value = false;
+			cmdFollow.value = false;
+			cmdVanity.value = false;
+			cmdPath.Disable();
+			ClearAll();
+			DistributedValueBase.SetDValue("CharacterCreationActive", true);
+			Camera.RequestCameraPosRotUpdates(false);
+			//MoveToPlayer();
+			setTimeout(Delegate.create(this, DisableCharacterCreation), 500);
 			if ( m_Window )
 			{
-				m_Window.removeMovieClip();
+				optPhotoModeWindowEnabled.SetValue(false);
 			}
 		}
 	}
 
 	private function PlayFieldChanged()
 	{
-		if ( cmdPhotoModeEnabled.GetValue())
+		if ( photoModeActive )
 		{
 			if ( AccountManagement.GetInstance().GetLoginState() != _global.Enums.LoginState.e_LoginStateInPlay)
 			{
 				setTimeout(Delegate.create(this, PlayFieldChanged), 100);
 				return;
 			}
-			cmdPhotoModeEnabled.SetValue(false)
+			cmdPhotoModeEnabled.SetValue(false);
 		}
 	}
 
-	private function PhotoModeWindowChanged(dVal:DistributedValue)
+	private function PhotoModeWindowChanged(dv:DistributedValue)
 	{
-		if (dVal.GetValue())
+		if (dv.GetValue())
 		{
 			if (m_Window) m_Window.removeMovieClip();
 			m_Window = m_SwfRoot.attachMovie("WinComp", "m_Window", m_SwfRoot.getNextHighestDepth(),
 				{_x:DistributedValueBase.GetDValue("PhotoMode_x"), _y:DistributedValueBase.GetDValue("PhotoMode_y")});
 			m_Window.addEventListener("dragEnd", this, "SaveWindowPosition");
-			m_Window.SetTitle(" PhotoMode v1.1", "left");
+			m_Window.SetTitle(" PhotoMode v1.2", "left");
 			m_Window.SetPadding(3);
 			m_Window.SetContent("WindowContent");
 			m_Window.ShowCloseButton(true);
@@ -177,6 +210,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			m_Window.ShowResizeButton(false);
 			m_Window.ShowFooter(false);
 			m_Window.ShowHelpButton(false);
+			m_Window.m_ShowHelpButton = false;
 		}
 		else
 		{
@@ -197,12 +231,6 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			Input.RegisterHotkey(inputKeys[i], "com.fox.PhotoMode.PhotoMode.SendInput", _global.Enums.Hotkey.eHotkeyDown, 0);
 			Input.RegisterHotkey(inputKeys[i], "com.fox.PhotoMode.PhotoMode.SendInput", _global.Enums.Hotkey.eHotkeyUp, 0);
 		}
-		// Vanity camera is missing Enum
-		for (var i in _global.Enums.InputCommand)
-		{
-			if (_global.Enums.InputCommand[i] == 150) return;
-		}
-		Input.RegisterHotkey(150, "com.fox.PhotoMode.PhotoMode.SendInput", _global.Enums.Hotkey.eHotkeyDown, 0);
 		Mouse.addListener(this);
 	}
 
@@ -213,7 +241,6 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			Input.RegisterHotkey(inputKeys[i], "", _global.Enums.Hotkey.eHotkeyDown, 0);
 			Input.RegisterHotkey(inputKeys[i], "", _global.Enums.Hotkey.eHotkeyUp, 0);
 		}
-		Input.RegisterHotkey(150, "", _global.Enums.Hotkey.eHotkeyDown, 0);
 		Mouse.removeListener(this);
 	}
 
@@ -253,8 +280,8 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 		if (Mouse.getTopMostEntity() != this.m_MouseTrap) return;
 		if (Key.isDown(Key.CONTROL))
 		{
-			currentFoV = Helper.LimitValue(0.1, 120, currentFoV - delta);
-			Camera.SetFOV(currentFoV * 2* Math.PI / 360);
+			currentFov = Helper.LimitValue(0.1, 120, currentFov - delta);
+			Camera.SetFOV(currentFov * 2 * Math.PI / 360);
 			if (!movementLocked) keysDown = [];
 		}
 		else
@@ -289,9 +316,13 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 	{
 		var emote:String;
 		var num = 1;
-		if Key.isDown(Key.SHIFT) num += 5;
+		if (Key.isDown(Key.SHIFT)) num += 5;
 		switch (dir) // Has to be negative to detect Shift+ keys
 		{
+			case inputKeys[18]:
+			//case _global.Enums.InputCommand.e_InputCommand_Use_Gadget:
+			//case _global.Enums.InputCommand.e_InputCommand_Movement_Dodge:
+				return;
 			case -_global.Enums.InputCommand.e_InputCommand_ToggleSelectSelf:
 				emote = DistributedValueBase.GetDValue("PhotoMode_StoreEmote" + num);
 				break;
@@ -333,10 +364,16 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			cmdEmote.value = emote;
 			return
 		}
-
 		switch (Math.abs(dir))
 		{
-			case _global.Enums.InputCommand.e_InputCommand_Toggle_Target_Mode:
+			case inputKeys[6]:
+			//case _global.Enums.InputCommand.e_InputCommand_Toggle_Target_Mode:
+			//case _global.Enums.InputCommand.e_InputCommand_Target_DefensiveSelf:
+				if ( !DistributedValueBase.GetDValue("PhotoMode_ChatOnAlt"))
+				{
+					m_MouseTrap.enabled = true;
+					return;
+				}
 				if (dir > 0)
 				{
 					m_MouseTrap.enabled = false;
@@ -350,7 +387,9 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			case _global.Enums.InputCommand.e_InputCommand_Movement_ToggleRunWalk:
 				if (dir > 0) walkingToggled = !walkingToggled;
 				return;
-			case 150:
+			case inputKeys[19]:
+			//case 150: // Vanity camera is missing enum
+			//case _global.Enums.InputCommand.e_InputCommand_Toggle_Target_Mode: //TSW
 				if (dir > 0)
 				{
 					DisableAll();
@@ -373,8 +412,12 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			{
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
-				case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
-				case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+				case inputKeys[3]:
+				case inputKeys[2]:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnRight:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnLeft:
 					movementLocked = false;
 					keysDown = [];
 				case 999:
@@ -404,23 +447,20 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 		keysDown.sort();
 	}
 
-	private function GetFramerate()
+	public function HandleMovement()
 	{
-		var now:Number = getTimer();
-		var framerate = frameCount / (now - frameStart) * 1000;
-		frameRateMultiplier = 60 / framerate;
-		framePanMultiplier = 60 / Math.min(framerate, ClientServerPerfTracker.GetClientFramerate());
-		frameStart = now;
-		frameCount = 0;
-	}
-
-	private function HandleMovement()
-	{
-		frameCount++;
+		var currentFrame = getTimer();
+		if (currentFrame - lastFrame < 5 ) return;
+		var frameMulti = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		
 		var cameraPosition:Vector3;
 		var lookPosition:Vector3;
 		var rotation:Number;
-		var speed:Number = Helper.GetMovementSpeed(walkingToggled) * frameRateMultiplier;
+		var speed:Number = Helper.GetMovementSpeed(walkingToggled) * frameMulti;
+		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
+		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
+		
 		if (orbitCharacter || orbitPosition)
 		{
 			if ((!orbitCharacter.GetDistanceToPlayer() || orbitCharacter.IsDead()) && !orbitCharacter.GetID().Equal(playerCharacter.GetID()) && !orbitPosition)
@@ -434,7 +474,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			if (orbitCharacter) cameraPosition = new Vector3(0, orbitCharacter.GetPosition(_global.Enums.AttractorPlace.e_Eye).y + yOffset, 0);
 			else cameraPosition = new Vector3(orbitPosition.x, orbitPosition.y + yOffset, orbitPosition.z);
 
-			var adj = yAdjustQueue / 50 * frameRateMultiplier;
+			var adj = yAdjustQueue / 50;
 			if (Math.abs(yAdjustQueue) < 0.001) adj = yAdjustQueue;
 			yAdjustQueue -= adj;
 			yOffset += yAdjustQueue;
@@ -452,13 +492,12 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 						var mousePosition = Mouse.getPosition();
 						var middlePoint:Point = new Point(Stage.width / 2, Stage.height / 2);
 
-						var xShift = (mousePosition.x - middlePoint.x) * currentFoV / 60 * framePanMultiplier;
+						var xShift = (mousePosition.x - middlePoint.x) * xMultiplier;
 						xShift > 0 ? orbitDirection = 1 : orbitDirection = 0;
-						rotation += xShift / 8000;
+						rotation += xShift;
 
-						var yShift = (middlePoint.y - mousePosition.y) * currentFoV / 60 * frameRateMultiplier;
-						var amount = yShift / 14000;
-						adj = amount;
+						var yShift = (middlePoint.y - mousePosition.y) * yMultiplier * 1.5;
+						adj = yShift;
 						var newAdj = adj + adj * Math.abs(yOffset);
 						yOffset -= newAdj;
 
@@ -470,18 +509,22 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 					case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
 						yAdjustQueue -= 0.01 * speed;
 						break;
-					case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+					case inputKeys[2]:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnRight:
 						orbitDirection = 0;
 						break;
-					case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+					case inputKeys[3]:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnLeft:
 						orbitDirection = 1;
 						break;
 				}
 			}
 			if (!rotating)
 			{
-				if (orbitDirection) rotation = Helper.ClampRotation(rotation + 0.005 * framePanMultiplier);
-				else rotation = Helper.ClampRotation(rotation - 0.005 * framePanMultiplier);
+				if (orbitDirection) rotation = Helper.ClampRotation(rotation + 0.0003 * frameMulti);
+				else rotation = Helper.ClampRotation(rotation - 0.0003 * frameMulti);
 				lookYOffset = 0;
 			}
 			cameraPosition.x = lookPosition.x + (1 + distanceOffset) * -Math.sin(rotation);
@@ -500,11 +543,11 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			cameraPosition = followCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 			lookPosition = followCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 			rotation = Helper.GetConvertedRotation(followCharacter.GetRotation());
-			var adj = yAdjustQueue / 50 * frameRateMultiplier;
-			if (Math.abs(yAdjustQueue) < 0.002) adj = yAdjustQueue;
+			var adj = yAdjustQueue / 30;
+			if (Math.abs(yAdjustQueue) < 0.004) adj = yAdjustQueue;
 			yAdjustQueue -= adj;
 			yOffset += adj;
-			yOffset = Helper.LimitValue( -0.75, 1, yOffset);
+			yOffset = Helper.LimitValue( -0.75, 1, yOffset);			
 			cameraPosition.y += yOffset;
 			var rotated:Boolean = false;
 			for (var i in keysDown)
@@ -514,13 +557,12 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 					case 999:
 						var mousePosition = Mouse.getPosition();
 						var middlePoint:Point = new Point(Stage.width / 2, Stage.height / 2);
-						var xShift = (mousePosition.x - middlePoint.x) * currentFoV / 60;
+						var xShift = (mousePosition.x - middlePoint.x) * xMultiplier;
 						var currentRotation = Helper.GetConvertedRotation(Camera.m_AngleY);
-						currentRotation = Helper.ClampRotation(currentRotation + xShift / 28000  * framePanMultiplier);  // different multipliers on purpose
+						currentRotation = Helper.ClampRotation(currentRotation + xShift);
 
-						var yShift = (middlePoint.y - mousePosition.y) * currentFoV / 60;
-						adj = yShift / 22000 * frameRateMultiplier; // different multipliers on purpose
-						var newAdj = adj + adj * Math.abs(lookYOffset); // i forgot what this does,but it makes panning up/down feel better
+						var yShift = (middlePoint.y - mousePosition.y) * yMultiplier;
+						var newAdj = yShift + yShift * Math.abs(lookYOffset);
 						lookYOffset += newAdj;
 						lookYOffset = Helper.LimitValue( -2, 2, lookYOffset);
 						lookPosition.y += lookYOffset;
@@ -536,16 +578,22 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 						rotated = true;
 						break;
 					case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
+						if (yAdjustQueue < 0) yAdjustQueue = 0;
 						yAdjustQueue += 0.3 * speed;
 						break;
 					case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
+						if (yAdjustQueue > 0) yAdjustQueue = 0;
 						yAdjustQueue -= 0.3 * speed;
 						break;
-					case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+					case inputKeys[3]:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnLeft:
 						xOffset += 0.25 * speed;
 						xOffset = Helper.LimitValue( -1, 1, xOffset);
 						break;
-					case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+					case inputKeys[2]:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnRight:
 						xOffset -=  0.25 * speed;
 						xOffset = Helper.LimitValue( -1, 1, xOffset);
 						break;
@@ -563,7 +611,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 				cameraPosition.z += xOffset * -Math.cos(converted);
 				cameraPosition = Helper.GetSmoothedMovement(cameraPosition, Camera.m_Pos, 0.05);
 				lookPosition.x += (2 + distanceOffset) * Math.sin(rotation);
-				lookPosition.z += (2 + distanceOffset) * Math.cos(rotation)
+				lookPosition.z += (2 + distanceOffset) * Math.cos(rotation);
 			}
 		}
 		else if (vanityCharacter)
@@ -580,7 +628,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			}
 			cameraPosition = vanityCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 			rotation = Helper.GetConvertedRotation(Camera.m_AngleY);
-			var adj = yAdjustQueue / 50 * frameRateMultiplier;
+			var adj = yAdjustQueue / 50;
 			if (Math.abs(yAdjustQueue) < 0.0005) adj = yAdjustQueue;
 			yAdjustQueue -= adj;
 			yOffset += adj;
@@ -598,13 +646,12 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 					case 999:
 						var mousePosition = Mouse.getPosition();
 						var middlePoint:Point = new Point(Stage.width / 2, Stage.height / 2);
-						var xShift = (mousePosition.x - middlePoint.x) * currentFoV / 60 * framePanMultiplier;
+						var xShift = (mousePosition.x - middlePoint.x) * xMultiplier;
 						var currentRotation = Helper.GetConvertedRotation(Camera.m_AngleY);
-						var old = currentRotation;
-						currentRotation = Helper.ClampRotation(currentRotation + xShift / 32000);
+						currentRotation = Helper.ClampRotation(currentRotation + xShift);
 
-						var yShift = (middlePoint.y - mousePosition.y) * currentFoV / 60 * frameRateMultiplier;
-						lookYOffset += yShift / 14000;
+						var yShift = (middlePoint.y - mousePosition.y) * yMultiplier;
+						lookYOffset += yShift;
 						lookYOffset = Helper.LimitValue( -2, 2, lookYOffset);
 
 						cameraPosition = Helper.GetSmoothedMovement(cameraPosition, Camera.m_Pos, 0.05);
@@ -615,19 +662,25 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 						rotated = true;
 						break;
 					case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
+						if (yAdjustQueue < 0) yAdjustQueue = 0;
 						yAdjustQueue += 0.075 * speed;
 						break;
 					case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
+						if (yAdjustQueue > 0) yAdjustQueue = 0;
 						yAdjustQueue -= 0.075 * speed;
 						break;
-					case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+					case inputKeys[3]:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnLeft:
 						rotation = Helper.ClampRotation(rotation + 0.1 * speed);
 						cameraPosition = vanityCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 						cameraPosition.y += yOffset;
 						cameraPosition.x -= (1 + distanceOffset) * Math.sin(rotation);
 						cameraPosition.z -= (1 + distanceOffset) * Math.cos(rotation);
 						break;
-					case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+					case inputKeys[2]:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnRight:
 						rotation = Helper.ClampRotation(rotation - 0.1 * speed);
 						cameraPosition = vanityCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 						cameraPosition.y += yOffset;
@@ -659,7 +712,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 					case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
 						if (!movementLocked)
 						{
-							var c = Vector3.Sub(lookPosition,cameraPosition ).Len();
+							var c = Vector3.Sub(lookPosition, cameraPosition ).Len();
 							var angle = Math.asin(lookYOffset / c);
 							var multi = Helper.MapValue(Math.abs(angle), 0, Math.PI / 2, 1, 0);
 							var multi2 = Helper.MapValue(Math.abs(angle), 0, Math.PI / 2, 0, 1);
@@ -692,13 +745,17 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 						}
 						lookPosition = new Vector3(cameraPosition.x + Math.sin(rotation), cameraPosition.y + lookYOffset, cameraPosition.z + Math.cos(rotation));
 						break;
-					case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+					case inputKeys[3]:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnLeft:
 						var adjustedRotation:Number = !movementLocked ?  Helper.ClampRotation(rotation + Math.PI / 2) : Helper.ClampRotation(lockedRotation + Math.PI / 2);
 						cameraPosition.x -= speed * Math.sin(adjustedRotation);
 						cameraPosition.z -= speed * Math.cos(adjustedRotation);
 						lookPosition = new Vector3(cameraPosition.x + Math.sin(rotation), cameraPosition.y + lookYOffset, cameraPosition.z + Math.cos(rotation));
 						break;
-					case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+					case inputKeys[2]:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+					//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnRight:
 						var adjustedRotation:Number = !movementLocked ?  Helper.ClampRotation(rotation + Math.PI / 2) : Helper.ClampRotation(lockedRotation + Math.PI / 2);
 						cameraPosition.x += speed * Math.sin(adjustedRotation);
 						cameraPosition.z += speed * Math.cos(adjustedRotation);
@@ -707,18 +764,19 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 					case 999:
 						var mousePosition = Mouse.getPosition();
 						var middlePoint:Point = new Point(Stage.width / 2, Stage.height / 2);
-						var xShift = (mousePosition.x - middlePoint.x) * currentFoV / 60;
-						rotation = Helper.ClampRotation(rotation + xShift / 24000 * framePanMultiplier); // different multipliers on purpose
+						var xShift = (mousePosition.x - middlePoint.x) * xMultiplier;
+						rotation = Helper.ClampRotation(rotation + xShift);
 
-						var yShift = (middlePoint.y - mousePosition.y) * currentFoV / 60;
-						adj = yShift / 32000 * frameRateMultiplier; // different multipliers on purpose
-						var newAdj = adj + adj * Math.abs(lookYOffset); // i forgot what this does,but it makes panning up/down feel better
+						var yShift = (middlePoint.y - mousePosition.y) * yMultiplier;
+						var newAdj = yShift + yShift * Math.abs(lookYOffset);
 						lookYOffset += newAdj;
 						lookYOffset = Helper.LimitValue( -2, 2, lookYOffset);
 						lookPosition.y = cameraPosition.y + lookYOffset;
 
-						lookPosition.x = cameraPosition.x + 1 * Math.sin(rotation);
-						lookPosition.z = cameraPosition.z + 1 * Math.cos(rotation);
+						lookPosition.x = cameraPosition.x + Math.sin(rotation);
+						lookPosition.z = cameraPosition.z + Math.cos(rotation);
+						var c = Vector3.Sub(lookPosition, cameraPosition ).Len();
+						var angle = Math.asin(lookYOffset / c);
 						break;
 				}
 			}

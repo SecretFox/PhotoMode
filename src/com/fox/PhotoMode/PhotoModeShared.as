@@ -4,12 +4,14 @@ import com.GameInterface.Game.Character;
 import com.GameInterface.MathLib.Vector3;
 import com.fox.ModBase;
 import com.fox.PhotoMode.Helper;
+import com.fox.PhotoMode.PhotoMode;
 import com.fox.PhotoMode.cmd.EmoteCommand;
 import com.fox.PhotoMode.cmd.FollowCommand;
 import com.fox.PhotoMode.cmd.GetPosCommand;
 import com.fox.PhotoMode.cmd.GotoCommand;
 import com.fox.PhotoMode.cmd.LooksCommand;
 import com.fox.PhotoMode.cmd.OrbitCommand;
+import com.fox.PhotoMode.cmd.PathCommand;
 import com.fox.PhotoMode.cmd.VanityCommand;
 /**
 * ...
@@ -18,10 +20,15 @@ import com.fox.PhotoMode.cmd.VanityCommand;
 class com.fox.PhotoMode.PhotoModeShared extends ModBase
 {
 	static var m_Window:MovieClip;
-	
+	static var m_SwfRoot:MovieClip;
+	static var Mod:PhotoMode;
 	// Chat commands
 	static var cmdPhotoModeEnabled:DistributedValue;
-	static var cmdPhotoModeWindowEnabled:DistributedValue;
+	static var optPhotoModeWindowEnabled:DistributedValue;
+	static var optMovementSpeed:DistributedValue;
+	static var optPanX:DistributedValue;
+	static var optPanY:DistributedValue;
+	static var optChatOnAlt:DistributedValue;
 	static var cmdFollow:FollowCommand;
 	static var cmdOrbit:OrbitCommand;
 	static var cmdVanity:VanityCommand;
@@ -29,26 +36,26 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 	static var cmdEmote:EmoteCommand;
 	static var cmdGoto:GotoCommand;
 	static var cmdGetPos:GetPosCommand;
+	static var cmdPath:PathCommand;
 	static var chatCommands:Array = [];
-
+	
 	// Camera controls/adjustments
+	static var keysDown:Array = [];
+	
 	static var photoModeActive:Boolean;
 	static var movementLocked:Boolean;
 	static var walkingToggled:Boolean;
-	static var keysDown:Array = [];
-	static var currentFoV:Number;
+	static var currentFov:Number;
 	static var lockedRotation:Number;
+	static var orbitDirection:Number;
+	static var yOffset:Number;
+	static var xOffset:Number;
 	static var lookYOffset:Number;
 	static var yAdjustQueue:Number;
-	static var yOffset:Number;
 	static var distanceOffset:Number;
-	static var orbitDirection:Number;
-	static var xOffset:Number;
-	static var frameRateMultiplier:Number;
-	static var frameRateInterval:Number;
-	static var frameCount:Number;
-	static var frameStart:Number;
-	static var framePanMultiplier:Number;
+	static var movementSpeed:Number;
+	static var panSpeedX:Number;
+	static var PanSpeedY:Number;
 	
 	// camera targets
 	static var playerCharacter:Character;
@@ -57,14 +64,15 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 	static var orbitPosition:Vector3;	
 	static var vanityCharacter:Character;
 	
-	public function PhotoModeShared()
-	{
-	}
-	
 	static function CreateChatCommands()
 	{
 		cmdPhotoModeEnabled = DistributedValue.Create("PhotoMode_Enabled");
-		cmdPhotoModeWindowEnabled = DistributedValue.Create("PhotoMode_Window");
+		optPhotoModeWindowEnabled = DistributedValue.Create("PhotoMode_Window");
+		optMovementSpeed = DistributedValue.Create("PhotoMode_MovementSpeed");
+		optPanX = DistributedValue.Create("PhotoMode_PanSpeedX");
+		optPanY = DistributedValue.Create("PhotoMode_PanSpeedY");
+		optChatOnAlt = DistributedValue.Create("PhotoMode_ChatOnAlt");
+		
 		cmdFollow = new FollowCommand("PhotoMode_Follow");
 		cmdOrbit = new OrbitCommand("PhotoMode_Orbit");
 		cmdVanity = new VanityCommand("PhotoMode_Vanity");
@@ -72,6 +80,7 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 		cmdEmote = new EmoteCommand("PhotoMode_Emote");
 		cmdGoto = new GotoCommand("PhotoMode_Goto");
 		cmdGetPos = new GetPosCommand("PhotoMode_GetPos");
+		cmdPath = new PathCommand("PhotoMode_Path");
 	}
 	
 	static function Feedback(type)
@@ -83,7 +92,7 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 				break;
 			case 1:
 				m_Window.GetContent().Feedback("Resetting camera");
-				break
+				break;
 		}
 	}
 	
@@ -95,7 +104,7 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 		cameraPosition.z += 2* -Math.cos(rotation);
 		var lookPosition:Vector3 = new Vector3(cameraPosition.x* Math.sin(rotation), cameraPosition.y, cameraPosition.z* Math.cos(rotation));
 		Camera.PlaceCamera(cameraPosition.x, cameraPosition.y, cameraPosition.z, lookPosition.x, lookPosition.y, lookPosition.z, 0, 1, 0);
-		Camera.SetFOV(currentFoV* 2* Math.PI / 360);
+		Camera.SetFOV(currentFov * Math.PI / 180);
 		if (force)
 		{
 			Camera.m_Pos = cameraPosition;
@@ -113,7 +122,7 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 		walkingToggled = false;
 		followCharacter = undefined;
 		lockedRotation = undefined;
-		currentFoV = 60;
+		currentFov = 60;
 		lookYOffset = 0;
 		yAdjustQueue = 0;
 		yOffset = 0;
@@ -121,15 +130,11 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 	}
 	
 	/**
-	 * Clears controls and framerate counters
+	 * Clears controls
 	 */
 	static function ClearAll()
 	{
 		ClearControls();
-		frameRateMultiplier = 1;
-		frameCount = 0;
-		frameStart = 0;
-		framePanMultiplier = 0;
 	}
 	
 	static function DisableAll(cmd)
