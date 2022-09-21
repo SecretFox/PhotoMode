@@ -49,6 +49,7 @@ Freefly camera - Default camera, you can return to your character anytime by pre
 Follow Camera - Places camera right behind targets shoulder and sticks there  
 Orbit Camera - Circles an area or player  
 Vanity Camera - Close up camera that rotates around the target  
+Camera Paths - see [here](https://github.com/SecretFox/PhotoMode/tree/main/CameraPaths)
 
 ### Chat Commands  
 Most of these can be accessed through the command window or mod icon  
@@ -57,7 +58,7 @@ Don't forget the quotes (unless using true/false value)
 * `/option PhotoMode_Enabled true/false` to enter photomode, same as clicking the icon
 * `/option PhotoMode_Follow "target/random/playerName"`, can also be accessed from the command window
 * `/option PhotoMode_GetPos true` prints character or camera position
-* `/option PhotoMode_Goto "x,y,z" or "x,z"` - Teleports camera to a location
+* `/option PhotoMode_Goto "x,y,z" or "x,z" or x1,y1,z1,x2,y2,z2` - Teleports camera to a location (if using the 6 numbers format latter 3 specify the look position)  
 * `/option PhotoMode_Orbit "target/random/playerName/self/current"`, can also be accessed from the command window
 * `/option PhotoMode_Vanity "target/random/playerName/self"`, can also be accessed from the command window
 * `/option PhotoMode_Window true/false` Shows/Hides command window. Same as right clicking the icon
@@ -67,8 +68,13 @@ Don't forget the quotes (unless using true/false value)
 * `/option PhotoMode_PanSpeedX 1.0` Camera panning speed on X axis  
 * `/option PhotoMode_PanSpeedY 1.0` Camera panning speed on Y axis  
 * `/option PhotoMode_ChatOnAlt true/false` By default holding Alt will allow player to access chat, but this also disables camera panning which can be an issue if tab gets stuck due to alt tabbing  
-
-
+* `/option PhotoMode_Looks "all/playername/target,lookspackage"` Applies client sided lookspackage, for list of lookspackages see [here](https://github.com/super-jenius/Untold/blob/master/fox/LooksRDB.xml)  
+  * multiple id's can also be separated by using `;`
+  * Second arguments can also start with "reset/keep/clear/hide/restore", these can come helpful when applying certain lookspackages or building complex looks. Reset can be used to restore own looks, but it doesn't work on others.
+  * Examples:
+    * `/option PhotoMode_Looks "clear;6941926"` Turns player into Geary
+    * `/option PhotoMode_Looks "reset"` Returns players original look
+    * `/option PhotoMode_Looks "target,clear;6697044"` Turns targeted player into Sonnac
 ### Install
 Extract to `Secret World Legends\Data\Gui\Custom\Flash\`
 

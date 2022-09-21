@@ -65,3 +65,4 @@ easeInBounce
 easeOutBounce  
 easeInOutBounce  
 easeOutInBounce  
+![1](https://raw.githubusercontent.com/SecretFox/PhotoMode/main/CameraPaths/easings.png)  
