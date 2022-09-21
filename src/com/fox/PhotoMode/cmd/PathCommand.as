@@ -32,6 +32,7 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 	private var movementEasing:Function
 	private var lookEasing:Function;
 	private var fovEasing:Function;
+	private var enabling:Boolean;
 
 	public function PathCommand(name)
 	{
@@ -254,6 +255,7 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 	
 	private function ReCall(val)
 	{
+		enabling = false;
 		d_val.SetValue(val);
 	}
 
@@ -262,10 +264,11 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 		var val:String = dv.GetValue();
 		if (val)
 		{
-			if ( !photoModeActive ) 
+			if ( !photoModeActive || enabling ) 
 			{
 				setTimeout(Delegate.create(this, ReCall), 1000, val);
 				cmdPhotoModeEnabled.SetValue(true);
+				enabling = true;
 				return;
 			}
 			clearTimeout(popTimeout);
