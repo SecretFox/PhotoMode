@@ -88,7 +88,7 @@ Run the uninstall_fogRemoval.bat to uninstall it
 
 
 ### Uninstall  
-Delete `Secret World Legends\Data\Gui\Custom\Flash\PhotoMode`
+Delete `Secret World Legends\Data\Gui\Custom\Flash\PhotoMode`  
 Delete `Secret World Legends\scripts\agarthatour.txt`
 
 ### Uninstall FogRemoval
