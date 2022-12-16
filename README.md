@@ -76,10 +76,11 @@ Don't forget the quotes (unless using true/false value)
     * `/option PhotoMode_Looks "reset"` Returns players original look
     * `/option PhotoMode_Looks "target,clear;6697044"` Turns targeted player into Sonnac
 ### Install PhotoMode
-Extract to `Secret World Legends\Data\Gui\Custom\Flash\`
+Extract PhotoMode-v1.2.2.zip to `Secret World Legends\Data\Gui\Custom\Flash\`
+Extra: Save `AgarthaTour.txt` to `Secret World Legends\scripts\`
 
 ### Install FogRemoval shader override
-Extract to `Secret World Legends`  
+Extract FogRemoval.zip to `Secret World Legends`  
 It's technically against the ToS, so use at your own risk  
 Allows you to disable the persistent fog that appears on some zones by pressing F8  
 Keybind can be changed in the d3dx.ini  
@@ -88,6 +89,7 @@ Run the uninstall_fogRemoval.bat to uninstall it
 
 ### Uninstall  
 Delete `Secret World Legends\Data\Gui\Custom\Flash\PhotoMode`
+Delete `Secret World Legends\scripts\agarthatour.txt`
 
 ### Uninstall FogRemoval
 Run `Secret World Legends\uninstall_fogRemoval.bat`
