@@ -20,5 +20,6 @@
 	<Value name="PhotoMode_PanSpeedX" value="1" />
 	<Value name="PhotoMode_PanSpeedY" value="1" />
 	<Value name="PhotoMode_ChatOnAlt" value="true" />
-    <Archive name="PhotoMode_Cfg" />
+	<Value name="PhotoMode_DragCamera" value="true" />
+	<Archive name="PhotoMode_Cfg" />
 </Root>

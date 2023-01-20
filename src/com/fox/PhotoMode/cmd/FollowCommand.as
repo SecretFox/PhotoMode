@@ -5,6 +5,7 @@ import com.GameInterface.MathLib.Vector3;
 import com.Utils.ID32;
 import com.fox.PhotoMode.Helper;
 import com.fox.PhotoMode.cmd.ChatCommand;
+import flash.geom.Point;
 import mx.utils.Delegate;
 /**
 * ...
@@ -33,6 +34,7 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 		if (photoModeActive &&
 			!cmdOrbit.value &&
 			!cmdVanity.value &&
+			!cmdLock.value &&
 			!cmdPath.Pathing &&
 			!cmdPath.Enabling)
 		{
@@ -50,7 +52,6 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 		distanceOffset = 0;
 		lookYOffset = 0;
 		MoveToStart(true);
-		
 	}
 	
 	private function MoveToStart(firstRun)
@@ -74,7 +75,6 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 	
 	private function SlotChanged(dv:DistributedValue, temp)
 	{
-		
 		var value = dv.GetValue();
 		if (value)
 		{
@@ -137,5 +137,101 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 		{
 			Disable();
 		}
+	}
+
+	static function HandleMovement()
+	{
+		var currentFrame = getTimer();
+		if (currentFrame - lastFrame < 5 ) return;
+		var frameMulti = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		var cameraPosition:Vector3;
+		var lookPosition:Vector3;
+		var rotation:Number;
+		var speed:Number = Helper.GetMovementSpeed(walkingToggled) * frameMulti;
+		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
+		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
+		if (!followCharacter.GetDistanceToPlayer() || followCharacter.IsDead())
+		{
+			followCharacter = undefined;
+			cmdFollow.value = false;
+			Feedback(1);
+			return;
+		}
+		cameraPosition = followCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
+		lookPosition = followCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
+		rotation = Helper.GetConvertedRotation(followCharacter.GetRotation());
+
+		var adj = Math.abs(yAdjustQueue) < 0.004 ? yAdjustQueue : yAdjustQueue / 30;
+		yAdjustQueue -= adj;
+		yOffset += adj;
+		yOffset = Helper.LimitValue( -0.75, 1, yOffset);
+		cameraPosition.y += yOffset;
+		var rotated:Boolean = false;
+		for (var i in keysDown)
+		{
+			switch (keysDown[i])
+			{
+				case 999:
+					var mousePosition = Mouse.getPosition();
+					var middlePoint:Point = new Point(Stage.width / 2, Stage.height / 2);
+					var xShift = (mousePosition.x - middlePoint.x) * xMultiplier;
+					var currentRotation = Helper.GetConvertedRotation(Camera.m_AngleY);
+					currentRotation = Helper.ClampRotation(currentRotation + xShift);
+
+					var yShift = (middlePoint.y - mousePosition.y) * yMultiplier;
+					var newAdj = yShift + yShift * Math.abs(lookYOffset);
+					lookYOffset += newAdj;
+					lookYOffset = Helper.LimitValue( -2, 2, lookYOffset);
+					lookPosition.y += lookYOffset;
+
+					cameraPosition.x += (1 + distanceOffset) * -Math.sin(rotation);
+					cameraPosition.z += (1 + distanceOffset) * -Math.cos(rotation);
+					var converted = Helper.ClampRotation(rotation + Math.PI / 2);
+					cameraPosition.x += xOffset * -Math.sin(converted);
+					cameraPosition.z += xOffset * -Math.cos(converted);
+
+					lookPosition.x = cameraPosition.x + (2 + distanceOffset) * Math.sin(currentRotation);
+					lookPosition.z = cameraPosition.z + (2 + distanceOffset) * Math.cos(currentRotation);
+					rotated = true;
+					break;
+				case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
+					if (yAdjustQueue < 0) yAdjustQueue = 0;
+					yAdjustQueue += 0.3 * speed;
+					break;
+				case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
+					if (yAdjustQueue > 0) yAdjustQueue = 0;
+					yAdjustQueue -= 0.3 * speed;
+					break;
+				case inputKeys[3]:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnLeft:
+					xOffset += 0.25 * speed;
+					xOffset = Helper.LimitValue( -1, 1, xOffset);
+					break;
+				case inputKeys[2]:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnRight:
+					xOffset -=  0.25 * speed;
+					xOffset = Helper.LimitValue( -1, 1, xOffset);
+					break;
+				default:
+					break;
+			}
+		}
+		if (!rotated)
+		{
+			rotation = Helper.GetConvertedRotation(followCharacter.GetRotation());
+			cameraPosition.x += (1 + distanceOffset) * -Math.sin(rotation);
+			cameraPosition.z += (1 + distanceOffset) * -Math.cos(rotation);
+			var converted = Helper.ClampRotation(rotation + Math.PI / 2);
+			cameraPosition.x += xOffset * -Math.sin(converted);
+			cameraPosition.z += xOffset * -Math.cos(converted);
+			cameraPosition = Helper.GetSmoothedMovement(cameraPosition, Camera.m_Pos, 0.05);
+			lookPosition.x += (2 + distanceOffset) * Math.sin(rotation);
+			lookPosition.z += (2 + distanceOffset) * Math.cos(rotation);
+		}
+		Camera.PlaceCamera(cameraPosition.x, cameraPosition.y, cameraPosition.z, lookPosition.x, lookPosition.y, lookPosition.z, 0, 1, 0);
 	}
 }

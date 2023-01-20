@@ -46,7 +46,6 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 		Pathing = false;
 		Enabling = false;
 		if (d_val.GetValue()) d_val.SetValue(false);
-		if (photoModeActive) m_SwfRoot.onEnterFrame = Delegate.create(Mod, Mod.HandleMovement);
 		cameraPaths = [];
 		startLocation = undefined;
 		endLocation = undefined;
@@ -63,8 +62,9 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 		Camera.SetFOV(60 * Math.PI / 180);
 	}
 
-	private function InterpolatePath()
+	public function InterpolatePath()
 	{
+		if ( !startLocation ) return;
 		var timeNow = getTimer();
 		var elapsed = timeNow - StartTime;
 		if (
@@ -72,7 +72,6 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 			(!lookDuration || timeNow > StartTime + lookDuration) &&
 			(!fovDuration || timeNow > StartTime + fovDuration))
 		{
-			m_SwfRoot.onEnterFrame = undefined;
 			previousLookLocation = new Vector3(endLookLocation.x, endLookLocation.y, endLookLocation.z);
 			if ( fov )
 			{
@@ -245,7 +244,6 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 			clearOld = setTimeout(Delegate.create(this, ClearPreviousLookLocation), clearDelay + 500);
 
 			StartTime = getTimer();
-			m_SwfRoot.onEnterFrame = Delegate.create(this, InterpolatePath);
 		}
 	}
 
@@ -273,7 +271,6 @@ class com.fox.PhotoMode.cmd.PathCommand extends ChatCommand
 				return;
 			}
 			clearTimeout(popTimeout);
-			m_SwfRoot.onEnterFrame = undefined;
 			if ( val.toLowerCase() == "reset")
 			{
 				Disable();

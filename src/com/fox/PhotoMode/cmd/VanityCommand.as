@@ -4,6 +4,7 @@ import com.GameInterface.Game.Character;
 import com.GameInterface.MathLib.Vector3;
 import com.fox.PhotoMode.Helper;
 import com.fox.PhotoMode.cmd.ChatCommand;
+import flash.geom.Point;
 import mx.utils.Delegate;
 /**
 * ...
@@ -17,7 +18,7 @@ class com.fox.PhotoMode.cmd.VanityCommand extends ChatCommand
 		d_val.SignalChanged.Connect(SlotChanged, this);
 		chatCommands.push(this);
 	}
-	
+
 	private function Disable() 
 	{
 		if (d_val.GetValue())
@@ -32,6 +33,7 @@ class com.fox.PhotoMode.cmd.VanityCommand extends ChatCommand
 		if (photoModeActive &&
 			!cmdFollow.value &&
 			!cmdOrbit.value &&
+			!cmdLock.value &&
 			!cmdPath.Pathing &&
 			!cmdPath.Enabling)
 		{
@@ -135,5 +137,101 @@ class com.fox.PhotoMode.cmd.VanityCommand extends ChatCommand
 		{
 			Disable();
 		}
+	}
+
+	static function HandleMovement()
+	{
+		var currentFrame = getTimer();
+		if (currentFrame - lastFrame < 5 ) return;
+		var frameMulti = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		var cameraPosition:Vector3;
+		var lookPosition:Vector3;
+		var rotation:Number;
+		var speed:Number = Helper.GetMovementSpeed(walkingToggled) * frameMulti;
+		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
+		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
+		if (!vanityCharacter.GetDistanceToPlayer() || vanityCharacter.IsDead())
+		{
+			if (!vanityCharacter.GetID().Equal(playerCharacter.GetID()))
+			{
+				vanityCharacter = undefined;
+				cmdVanity.value = false;
+				Feedback(1);
+				return;
+			}
+		}
+		cameraPosition = vanityCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
+		rotation = Helper.GetConvertedRotation(Camera.m_AngleY);
+
+		var adj = Math.abs(yAdjustQueue) < 0.0005 ? yAdjustQueue : yAdjustQueue / 50;
+		yAdjustQueue -= adj;
+		yOffset += adj;
+		yOffset = Helper.LimitValue( -1.3, 0.35, yOffset);
+
+		cameraPosition.y += yOffset;
+		cameraPosition.x -= (1 + distanceOffset) * Math.sin(rotation);
+		cameraPosition.z -= (1 + distanceOffset) * Math.cos(rotation);
+		lookPosition = vanityCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
+		lookPosition.y += yOffset;
+		var rotated;
+		for (var i in keysDown)
+		{
+			switch (keysDown[i])
+			{
+				case 999:
+					var mousePosition = Mouse.getPosition();
+					var middlePoint:Point = new Point(Stage.width / 2, Stage.height / 2);
+					var xShift = (mousePosition.x - middlePoint.x) * xMultiplier;
+					var currentRotation = Helper.GetConvertedRotation(Camera.m_AngleY);
+					currentRotation = Helper.ClampRotation(currentRotation + xShift);
+
+					var yShift = (middlePoint.y - mousePosition.y) * yMultiplier;
+					lookYOffset += yShift;
+					lookYOffset = Helper.LimitValue( -2, 2, lookYOffset);
+
+					cameraPosition = Helper.GetSmoothedMovement(cameraPosition, Camera.m_Pos, 0.05);
+					lookPosition = new Vector3(
+						cameraPosition.x + (1 + distanceOffset) * Math.sin(currentRotation),
+						cameraPosition.y + lookYOffset,
+						cameraPosition.z + (1 + distanceOffset) * Math.cos(currentRotation));
+					rotated = true;
+					break;
+				case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
+					if (yAdjustQueue < 0) yAdjustQueue = 0;
+					yAdjustQueue += 0.075 * speed;
+					break;
+				case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
+					if (yAdjustQueue > 0) yAdjustQueue = 0;
+					yAdjustQueue -= 0.075 * speed;
+					break;
+				case inputKeys[3]:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnLeft:
+					rotation = Helper.ClampRotation(rotation + 0.1 * speed);
+					cameraPosition = vanityCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
+					cameraPosition.y += yOffset;
+					cameraPosition.x -= (1 + distanceOffset) * Math.sin(rotation);
+					cameraPosition.z -= (1 + distanceOffset) * Math.cos(rotation);
+					break;
+				case inputKeys[2]:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeRight:
+				//case _global.Enums.InputCommand.e_InputCommand_Movement_TurnRight:
+					rotation = Helper.ClampRotation(rotation - 0.1 * speed);
+					cameraPosition = vanityCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
+					cameraPosition.y += yOffset;
+					cameraPosition.x -= (1 + distanceOffset) * Math.sin(rotation);
+					cameraPosition.z -= (1 + distanceOffset) * Math.cos(rotation);
+					break;
+				default:
+					break;
+			}
+		}
+		if (!rotated)
+		{
+			lookYOffset = 0;
+		}
+		Camera.PlaceCamera(cameraPosition.x, cameraPosition.y, cameraPosition.z, lookPosition.x, lookPosition.y, lookPosition.z, 0, 1, 0);
 	}
 }

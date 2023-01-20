@@ -19,6 +19,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 {
 	private var m_DropDown:DropdownMenu;
 	private var m_Self:Button;
+	private var m_Save:Button;
 	private var m_Target:Button;
 	private var m_Random:Button;
 	private var m_Current:Button;
@@ -28,6 +29,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 	private var m_PanY:TextInput;
 	private var m_Invert:CheckBox;
 	private var m_OpenWindow:CheckBox;
+	private var m_Drag:CheckBox;
 	private var m_Alt:CheckBox;
 	private var m_Feedback:TextField;
 	private var m_TextSpeed:TextField;
@@ -54,6 +56,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		m_DropDown.disableFocus = true;
 		var data:Array = [];
 		data.push({label:"Follow", id:"PhotoMode_Follow"});
+		data.push({label:"Lock", id:"PhotoMode_Lock"});
 		data.push({label:"Orbit", id:"PhotoMode_Orbit"});
 		data.push({label:"Vanity", id:"PhotoMode_Vanity"});
 		data.push({label:"Goto", id:"PhotoMode_Goto"});
@@ -72,7 +75,9 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		m_OpenWindow.addEventListener("click", this, "WindowChanged");
 		m_Alt.selected = DistributedValueBase.GetDValue("PhotoMode_ChatOnAlt");
 		m_Alt.addEventListener("click", this, "AltChanged");
+		m_Drag.addEventListener("click", this, "DragChanged");
 		m_Self.addEventListener("click", this, "HandleButtonPress");
+		m_Save.addEventListener("click", this, "Save");
 		m_Target.addEventListener("click", this, "HandleButtonPress");
 		m_Random.addEventListener("click", this, "HandleButtonPress");
 		m_Current.addEventListener("click", this, "HandleButtonPress");
@@ -84,6 +89,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		m_PanX.addEventListener("focusOut", this, "FocusChanged");
 		m_PanY.addEventListener("focusIn", this, "FocusChanged");
 		m_PanY.addEventListener("focusOut", this, "FocusChanged");
+		m_Drag.selected = DistributedValueBase.GetDValue("PhotoMode_DragCamera");
 		m_Speed.text = DistributedValueBase.GetDValue("PhotoMode_MovementSpeed");
 		m_PanX.text = DistributedValueBase.GetDValue("PhotoMode_PanSpeedX");
 		m_PanY.text = DistributedValueBase.GetDValue("PhotoMode_PanSpeedY");
@@ -154,6 +160,14 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		}
 	}
 
+	private function Save()
+	{
+		HandleButtonPress({target:m_Speed, button:0});
+		HandleButtonPress({target:m_PanX, button:0});
+		HandleButtonPress({target:m_PanY, button:0});
+		RestoreFocus();
+	}
+
 	private function SlotKeyDown(key, dir)
 	{
 		var target;
@@ -186,7 +200,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 					if ( target == "PhotoMode_Path")
 					{
 						var pos:Vector3 = Character.GetClientCharacter().GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
-						pos.y += 0.25
+						pos.y += 0.25;
 						var rotation = Helper.GetConvertedRotation(Character.GetClientCharacter().GetRotation());
 						var pos2:Vector3 = new Vector3(pos.x, pos.y, pos.z);
 						pos.x += -Math.sin(rotation);
@@ -194,8 +208,8 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 						var current:Vector3 = Camera.m_Pos;
 						var distance = Math.abs(Vector3.Sub(pos, current).Len());
 						var speed = distance * 70;
-						value = "e:" + [pos.x, pos.y, pos.z].join(",") + 
-								" md:" + Math.round(speed) + 
+						value = "e:" + [pos.x, pos.y, pos.z].join(",") +
+								" md:" + Math.round(speed) +
 								" l:" + [pos2.x, pos2.y, pos2.z].join(",");
 					}
 					else value = true;
@@ -213,7 +227,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 					target = m_DropDown.selectedItem.id;
 					break;
 				case m_Input:
-					value = m_Input.text
+					value = m_Input.text;
 					target = m_DropDown.selectedItem.id;
 					break;
 				case m_Speed:
@@ -261,6 +275,12 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		RestoreFocus();
 	}
 
+	private function DragChanged()
+	{
+		DistributedValueBase.SetDValue("PhotoMode_DragCamera", !DistributedValueBase.GetDValue("PhotoMode_DragCamera"));
+		RestoreFocus();
+	}
+
 	private function ModeSelected()
 	{
 		m_Input.text = "";
@@ -270,6 +290,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		lastselectedIdx.SetValue(m_DropDown.selectedIndex);
 		m_Self._visible = false;
 		m_Target._visible = false;
+		m_Save._visible = false;
 		m_Random._visible = false;
 		m_Current._visible = false;
 		m_Input._visible = false;
@@ -277,6 +298,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		m_OpenWindow._visible = false;
 		m_Alt._visible = false;
 		m_Speed._visible = false;
+		m_Drag._visible = false;
 		m_PanX._visible = false;
 		m_PanY._visible = false;
 		m_TextSpeed._visible = false;
@@ -292,7 +314,18 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 				m_Random._y = 90;
 				m_Input._y = 130;
 				m_Feedback._y = 150;
-				break
+				break;
+			case "PhotoMode_Lock":
+				m_Self._visible = true;
+				m_Target._visible = true;
+				m_Random._visible = true;
+				m_Input._visible = true;
+				m_Self._y = 50;
+				m_Target._y = 90;
+				m_Random._y = 130;
+				m_Input._y = 170;
+				m_Feedback._y = 210;
+				break;
 			case "PhotoMode_Vanity":
 				m_Self._visible = true;
 				m_Target._visible = true;
@@ -330,6 +363,8 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 				m_Feedback._y = 110;
 				break
 			case "Settings":
+				m_Save._visible = true;
+				m_Drag._visible = true;
 				m_TextSpeed._visible = true;
 				m_TextX._visible = true;
 				m_TextY._visible = true;

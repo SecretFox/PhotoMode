@@ -33,6 +33,7 @@ These should change to match your in-game keybinds, by default;
 * Left click - select player
 * Shift - Super speed
 * Backspace - walk speed
+* Space / Shift+Space - Height  
 * Mouse wheel - Change height ( zoom in some camera modes)
 * Ctrl + mouse wheel - FoV
 * Alt - Has to be held down to access chat window
@@ -46,6 +47,7 @@ Some zones have persistent fog that can't seem to be removed
 ### Camera Modes  
 All camera modes have slightly different controls  
 Freefly camera - Default camera, you can return to your character anytime by pressing V  
+Lock camera - Focuses camera on target and keeps it centered on screen no matter what  
 Follow Camera - Places camera right behind targets shoulder and sticks there  
 Orbit Camera - Circles an area or player  
 Vanity Camera - Close up camera that rotates around the target  
@@ -54,13 +56,15 @@ Camera Paths - see [here](https://github.com/SecretFox/PhotoMode/tree/main/Camer
 ### Chat Commands  
 Most of these can be accessed through the command window or mod icon  
 Don't forget the quotes (unless using true/false value)  
+* `/option PhotoMode_DragCamera true/false` [default true], Turn camera by left/right clicking and dragging the mouse cursor. Set false to instead turn towards the direction gradually.  
 * `/option PhotoMode_Invert true/false` Inverts mouse click behaviors
 * `/option PhotoMode_Enabled true/false` to enter photomode, same as clicking the icon
 * `/option PhotoMode_Follow "target/random/playerName"`, can also be accessed from the command window
 * `/option PhotoMode_GetPos true` prints character or camera position
 * `/option PhotoMode_Goto "x,y,z" or "x,z" or x1,y1,z1,x2,y2,z2` - Teleports camera to a location (if using the 6 numbers format latter 3 specify the look position)  
-* `/option PhotoMode_Orbit "target/random/playerName/self/current"`, can also be accessed from the command window
-* `/option PhotoMode_Vanity "target/random/playerName/self"`, can also be accessed from the command window
+* `/option PhotoMode_Orbit "target/random/playerName/self/current"`, can also be accessed from the command window  
+* `/option PhotoMode_Lock "target/random/playerName/self"`, can also be accessed from the command window  
+* `/option PhotoMode_Vanity "target/random/playerName/self"`, can also be accessed from the command window  
 * `/option PhotoMode_Window true/false` Shows/Hides command window. Same as right clicking the icon
 * `/option PhotoMode_Emote "all/playername/target,EmoteName"` Plays client sided emote, for list of emotes see [here](https://github.com/super-jenius/Untold/blob/master/fox/Animation.xml)
 * `/option PhotoMode_StoreEmote1-10 "emoteString"` Stores emote string for PhotoMode_Emote command. Stored emote can be called in PhotoMode by pressing Select Team Member 1-10 keybinds  
