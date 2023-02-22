@@ -72,7 +72,7 @@ Don't forget the quotes (unless using true/false value)
 * `/option PhotoMode_PanSpeedX 1.0` Camera panning speed on X axis  
 * `/option PhotoMode_PanSpeedY 1.0` Camera panning speed on Y axis  
 * `/option PhotoMode_ChatOnAlt true/false` By default holding Alt will allow player to access chat, but this also disables camera panning which can be an issue if tab gets stuck due to alt tabbing  
-* `/option PhotoMode_Looks "all/playername/target,lookspackage"` Applies client sided lookspackage, for list of lookspackages see [here](https://github.com/super-jenius/Untold/blob/master/fox/LooksRDB.xml)  
+* `/option PhotoMode_Looks "all/playername/target,lookspackage"` Applies client sided lookspackage, for list of lookspackages see [here](https://github.com/super-jenius/Untold/blob/master/fox/LooksRDB.xml) or [here](https://github.com/SecretFox/PhotoMode/blob/main/Lookconfig_all.txt)  
   * multiple id's can also be separated by using `;`
   * Second arguments can also start with "reset/keep/clear/hide/restore", these can come helpful when applying certain lookspackages or building complex looks. Reset can be used to restore own looks, but it doesn't work on others.
   * Examples:
