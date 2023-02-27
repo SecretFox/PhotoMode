@@ -25,6 +25,8 @@ PhotoMode mod for Secret World Legends
 Start by unlocking your UI with the lock icon at the top right and moving the mods camera icon somewhere sensible  
 Left click the camera icon to enter PhotoMode, Right click to open/close command window  
 **Requires https://github.com/SecretFox/BetterUIToggle if you want to hide your UI**
+![windows](https://user-images.githubusercontent.com/25548149/221655748-bcfa1aac-948f-44af-8147-dd46867b6a6b.png)
+
 
 ### Camera controls  
 These should change to match your in-game keybinds, by default;
@@ -71,6 +73,9 @@ Don't forget the quotes (unless using true/false value)
 * `/option PhotoMode_PanSpeedX 1.0` Camera panning speed on X axis  
 * `/option PhotoMode_PanSpeedY 1.0` Camera panning speed on Y axis  
 * `/option PhotoMode_ChatOnAlt true/false` By default holding Alt will allow player to access chat, but this also disables camera panning which can be an issue if tab gets stuck due to alt tabbing  
+
+## Emotes/Looks
+In newer versions these can be accessed through the menus, but you can also use the following chat commands.  
 * `/option PhotoMode_Emote "all/playername/target,EmoteName"` Plays client sided emote, for list of emotes see [here](https://github.com/super-jenius/Untold/blob/master/fox/Animation.xml)
 * `/option PhotoMode_Looks "all/playername/target,lookspackage"` Applies client sided lookspackage, for list of lookspackages see [here](https://github.com/super-jenius/Untold/blob/master/fox/LooksRDB.xml) or [here](https://github.com/SecretFox/PhotoMode/blob/main/Lookconfig_all.txt)  
   * multiple id's can also be separated by using `;`
