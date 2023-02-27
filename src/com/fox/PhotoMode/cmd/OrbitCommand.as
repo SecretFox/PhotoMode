@@ -13,14 +13,14 @@ import mx.utils.Delegate;
 */
 class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 {
-	public function OrbitCommand(name) 
+	public function OrbitCommand(name)
 	{
 		super(name);
 		d_val.SignalChanged.Connect(SlotChanged, this);
 		chatCommands.push(this);
 	}
 
-	private function Disable() 
+	private function Disable()
 	{
 		if (d_val.GetValue())
 		{
@@ -32,7 +32,7 @@ class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 		orbitPosition = undefined;
 		orbitCharacter = undefined;
 		yOffset = 0;
-		
+
 		if (photoModeActive &&
 			!cmdFollow.value &&
 			!cmdVanity.value &&
@@ -81,7 +81,7 @@ class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 		if (!orbitPosition) Camera.m_AngleY = orbitCharacter.GetRotation();
 		else Camera.m_AngleY = orgRot;
 	}
-	
+
 	private function SlotChanged(dv:DistributedValue, temp)
 	{
 		var value:String = dv.GetValue();
@@ -162,19 +162,8 @@ class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 		}
 	}
 
-	static function HandleMovement()
+	static function HandleMovement(frameMulti)
 	{
-		var currentFrame = getTimer();
-		if (currentFrame - lastFrame < 5 ) return;
-		var frameMulti = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
-		var cameraPosition:Vector3;
-		var lookPosition:Vector3;
-		var rotation:Number;
-		var speed:Number = Helper.GetMovementSpeed(walkingToggled) * frameMulti;
-		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
-		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
 		if ((!orbitCharacter.GetDistanceToPlayer() || orbitCharacter.IsDead()) && !orbitCharacter.GetID().Equal(playerCharacter.GetID()) && !orbitPosition)
 		{
 			orbitCharacter = undefined;
@@ -183,21 +172,34 @@ class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 			Feedback(1);
 			return;
 		}
-		if (orbitCharacter) cameraPosition = new Vector3(0, orbitCharacter.GetPosition(_global.Enums.AttractorPlace.e_Eye).y + yOffset, 0);
+		var cameraPosition:Vector3;
+		var lookPosition:Vector3;
+		var rotation:Number;
+		var speed:Number = Helper.GetMovementSpeed(walkingToggled, adjustingHeight) * frameMulti;
+		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
+		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
+		if (orbitCharacter) cameraPosition = new Vector3(0, orbitCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim).y + yOffset, 0);
 		else cameraPosition = new Vector3(orbitPosition.x, orbitPosition.y + yOffset, orbitPosition.z);
 
 		var adj = Math.abs(yAdjustQueue) < 0.001 ? yAdjustQueue : yAdjustQueue / 25;
 		yAdjustQueue -= adj;
 		yOffset += adj;
 		yOffset = Helper.LimitValue( -1, 3, yOffset);
-
+		var tempKeys:Array;
+		if (adjustingHeight)
+		{
+			tempKeys = keysDown.concat();
+			if (!Key.isDown(Key.SHIFT)) tempKeys.push("SPACE");
+			else tempKeys.push("-SPACE");
+		}
+		else tempKeys = keysDown;
 		rotation = Helper.GetConvertedRotation(Camera.m_AngleY);
-		if (!orbitPosition) lookPosition = orbitCharacter.GetPosition(_global.Enums.AttractorPlace.e_Eyes);
+		if (!orbitPosition) lookPosition = orbitCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 		else lookPosition = new Vector3(orbitPosition.x, orbitPosition.y - 0.5, orbitPosition.z );
 		var rotating;
-		for (var i in keysDown)
+		for (var i in tempKeys)
 		{
-			switch (keysDown[i])
+			switch (tempKeys[i])
 			{
 				case 999:
 					var mousePosition = Mouse.getPosition();
@@ -214,9 +216,11 @@ class com.fox.PhotoMode.cmd.OrbitCommand extends ChatCommand
 
 					rotating = true;
 					break;
+				case "SPACE":
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
 					yAdjustQueue += 0.1 * speed;
 					break;
+				case "-SPACE":
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
 					yAdjustQueue -= 0.1 * speed;
 					break;

@@ -1,5 +1,6 @@
 import com.GameInterface.AccountManagement;
 import com.GameInterface.WaypointInterface;
+import com.Utils.Archive;
 import com.fox.PhotoMode.cmd.FollowCommand;
 import com.fox.PhotoMode.cmd.LockCommand;
 import com.fox.PhotoMode.cmd.OrbitCommand;
@@ -31,7 +32,8 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 		Mod = new PhotoMode(swfRoot);
 		swfRoot.onLoad = function() { PhotoModeShared.Mod.Load()};
 		swfRoot.onUnload = function() { PhotoModeShared.Mod.Unload()};
-		swfRoot.OnModuleActivated = function() { PhotoModeShared.Mod.Activate()};
+		swfRoot.OnModuleActivated = function(cfg) { PhotoModeShared.Mod.Activate(cfg)};
+		swfRoot.OnModuleDeActivated = function() { return PhotoModeShared.Mod.Deactivate()};
 	}
 
 	public function PhotoMode(root)
@@ -90,9 +92,15 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 		}
 	}
 
-	public function Activate()
+	public function Activate(cfg:Archive)
 	{
+		config = cfg;
 		PhotoModeChanged(cmdPhotoModeEnabled);
+	}
+
+	public function Deactivate():Archive
+	{
+		return config;
 	}
 
 	public function Unload()
@@ -180,10 +188,10 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 		if (dv.GetValue())
 		{
 			if (m_Window) m_Window.removeMovieClip();
-			m_Window = m_SwfRoot.attachMovie("WinComp", "m_Window", m_SwfRoot.getNextHighestDepth(),
-				{_x:DistributedValueBase.GetDValue("PhotoMode_x"), _y:DistributedValueBase.GetDValue("PhotoMode_y")});
+			var pos:Point = config.FindEntry("windowPos", new Point(30, 40));
+			m_Window = m_SwfRoot.attachMovie("WinComp", "m_Window", m_SwfRoot.getNextHighestDepth(), {_x:pos.x, _y:pos.y});
 			m_Window.addEventListener("dragEnd", this, "SaveWindowPosition");
-			m_Window.SetTitle(" PhotoMode v1.3.0", "left");
+			m_Window.SetTitle(" PhotoMode v1.4.0", "left");
 			m_Window.SetPadding(3);
 			m_Window.SetContent("WindowContent");
 			m_Window.ShowCloseButton(true);
@@ -196,6 +204,8 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 		else
 		{
 			m_Window.removeMovieClip();
+			_global.com.fox.PhotoMode.GUI.WindowContent.Looks = undefined;
+			_global.com.fox.PhotoMode.GUI.WindowContent.Emotes = undefined;
 		}
 	}
 
@@ -282,8 +292,9 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			else
 			{
 				var mod = 0.5; // base height adjustment speed
-				if (Key.isDown(Key.SHIFT)) mod *= 5; // shift speed multiplier
-				if ( (delta > 0 && yAdjustQueue < 0) || (delta < 0 && yAdjustQueue > 0)) mod *= 3;
+				if (walkingToggled) mod = mod / 5;
+				if (Key.isDown(Key.SHIFT)) mod *= 2; // shift speed multiplier
+				if ( (delta > 0 && yAdjustQueue < 0) || (delta < 0 && yAdjustQueue > 0)) yAdjustQueue = 0; // speed up
 				yAdjustQueue += delta * mod;
 			}
 		}
@@ -391,7 +402,11 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 				if (dir > 0)
 				{
 					movementLocked = !movementLocked;
-					if (movementLocked) lockedRotation = Helper.GetConvertedRotation(Camera.m_AngleY);
+					if (movementLocked)
+					{
+						lockedRotation = Helper.GetConvertedRotation(Camera.m_AngleY);
+						lockedAngle = undefined;
+					}
 					else keysDown = [];
 				}
 				return;
@@ -439,27 +454,26 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 
 	public function HandleMovement()
 	{
-		if (adjustingHeight)
-		{
-			if (Key.isDown(Key.SHIFT)) yAdjustQueue -= 0.050;
-			else yAdjustQueue += 0.050;
-		}
+		var currentFrame = getTimer();
+		if (currentFrame - lastFrame < 5 ) return;
+		var frameMulti = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 
 		// Special camera modes
 		if (orbitCharacter || orbitPosition)
 		{
-			OrbitCommand.HandleMovement();
+			OrbitCommand.HandleMovement(frameMulti);
 			return;
 		}
 		else if (followCharacter)
 		{
-			FollowCommand.HandleMovement();
+			FollowCommand.HandleMovement(frameMulti);
 			return;
 
 		}
 		else if (vanityCharacter)
 		{
-			VanityCommand.HandleMovement();
+			VanityCommand.HandleMovement(frameMulti);
 			return;
 		}
 		else if ( cmdPath.Enabling || cmdPath.Pathing)
@@ -469,66 +483,75 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 		}
 		else if ( lockCharacter )
 		{
-			LockCommand.HandleMovement();
+			LockCommand.HandleMovement(frameMulti);
 			return;
 		}
 
 		// freefly
-		var currentFrame = getTimer();
-		if (currentFrame - lastFrame < 5 ) return;
-		var frameMulti = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
 		var cameraPosition:Vector3;
 		var lookPosition:Vector3;
 		var rotation:Number;
-		var speed:Number = Helper.GetMovementSpeed(walkingToggled) * frameMulti;
+		var speed:Number = Helper.GetMovementSpeed(walkingToggled, adjustingHeight) * frameMulti;
 		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
 		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
 
 		cameraPosition = new Vector3(Camera.m_Pos.x, Camera.m_Pos.y, Camera.m_Pos.z);
-		var adj = Math.abs(yAdjustQueue) < 0.008 ? yAdjustQueue : yAdjustQueue / 25;
+		rotation = Helper.GetConvertedRotation(Camera.m_AngleY);
+		if (adjustingHeight)
+		{
+			if (Key.isDown(Key.SHIFT)) yAdjustQueue -= speed;
+			else yAdjustQueue += speed;
+		}
+		var adj = Math.abs(yAdjustQueue) < 0.008 ? yAdjustQueue : yAdjustQueue / 200 * frameMulti;
 		yAdjustQueue -= adj;
 		cameraPosition.y += adj;
-		rotation = Helper.GetConvertedRotation(Camera.m_AngleY);
+
 		lookPosition = new Vector3(cameraPosition.x + Math.sin(rotation), cameraPosition.y + lookYOffset, cameraPosition.z + Math.cos(rotation));
 		for (var i = 0; i < keysDown.length; i++ )
 		{
 			switch (keysDown[i])
 			{
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
+					if (!lockedAngle)
+					{
+						var c = Vector3.Sub(lookPosition, cameraPosition ).Len();
+						lockedAngle = Math.asin(lookYOffset / c);
+					}
 					if (!movementLocked)
 					{
 						var c = Vector3.Sub(lookPosition, cameraPosition ).Len();
 						var angle = Math.asin(lookYOffset / c);
-						var multi = Helper.MapValue(Math.abs(angle), 0, Math.PI / 2, 1, 0);
-						var multi2 = Helper.MapValue(Math.abs(angle), 0, Math.PI / 2, 0, 1.5);
-						cameraPosition.y += speed * Math.sin(angle) * multi2;
-						cameraPosition.x += speed * Math.sin(rotation) * multi;
-						cameraPosition.z += speed * Math.cos(rotation) * multi;
+						cameraPosition.x += speed * Math.sin(rotation) * Math.cos(angle);
+						cameraPosition.z += speed * Math.cos(rotation) * Math.cos(angle);
+						cameraPosition.y += speed * Math.sin(angle);
 					}
 					else
 					{
-						cameraPosition.x += speed * Math.sin(lockedRotation);
-						cameraPosition.z += speed * Math.cos(lockedRotation);
+						cameraPosition.x += speed * Math.sin(lockedRotation) * Math.cos(lockedAngle);
+						cameraPosition.z += speed * Math.cos(lockedRotation) * Math.cos(lockedAngle);
+						cameraPosition.y += speed * Math.sin(lockedAngle);
 					}
 					lookPosition = new Vector3(cameraPosition.x + Math.sin(rotation), cameraPosition.y + lookYOffset, cameraPosition.z + Math.cos(rotation));
 					break;
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
+					if (!lockedAngle)
+					{
+						var c = Vector3.Sub(lookPosition, cameraPosition ).Len();
+						lockedAngle = Math.asin(lookYOffset / c);
+					}
 					if (!movementLocked)
 					{
-						var c = Vector3.Sub(lookPosition,cameraPosition ).Len();
+						var c = Vector3.Sub(lookPosition, cameraPosition ).Len();
 						var angle = Math.asin(lookYOffset / c);
-						var multi = Helper.MapValue(Math.abs(angle), 0, Math.PI / 2, 1, 0);
-						var multi2 = Helper.MapValue(Math.abs(angle), 0, Math.PI / 2, 0, 1);
-						cameraPosition.y += speed * -Math.sin(angle) * multi2;
-						cameraPosition.x += speed * -Math.sin(rotation) / multi;
-						cameraPosition.z += speed * -Math.cos(rotation) / multi;
+						cameraPosition.x -= speed * Math.sin(rotation) * Math.cos(angle);
+						cameraPosition.z -= speed * Math.cos(rotation) * Math.cos(angle);
+						cameraPosition.y -= speed * Math.sin(angle);
 					}
 					else
 					{
-						cameraPosition.x += speed * -Math.sin(lockedRotation);
-						cameraPosition.z += speed * -Math.cos(lockedRotation);
+						cameraPosition.x -= speed * Math.sin(lockedRotation) * Math.cos(lockedAngle);
+						cameraPosition.z -= speed * Math.cos(lockedRotation) * Math.cos(lockedAngle);
+						cameraPosition.y -= speed * Math.sin(lockedAngle);
 					}
 					lookPosition = new Vector3(cameraPosition.x + Math.sin(rotation), cameraPosition.y + lookYOffset, cameraPosition.z + Math.cos(rotation));
 					break;
@@ -556,10 +579,9 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 						rotation = Helper.ClampRotation(DragStartRotation + xShift);
 						lookYOffset = DragStartOffset - shift.y / 350 * optPanY.GetValue();
 						lookYOffset = Helper.LimitValue( -2, 2, lookYOffset);
-						Camera.m_AngleY = Helper.ToGameRotation(rotation);
-						lookPosition.x += Math.sin(rotation)
-										  lookPosition.z += Math.cos(rotation)
-															lookPosition.y += lookYOffset;
+						lookPosition.x += Math.sin(rotation);
+						lookPosition.z += Math.cos(rotation);
+						lookPosition.y += lookYOffset;
 					}
 					else
 					{
@@ -576,8 +598,6 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 
 						lookPosition.x = cameraPosition.x + Math.sin(rotation);
 						lookPosition.z = cameraPosition.z + Math.cos(rotation);
-						//var c = Vector3.Sub(lookPosition, cameraPosition ).Len();
-						///var angle = Math.asin(lookYOffset / c);
 					}
 					break;
 			}

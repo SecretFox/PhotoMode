@@ -12,19 +12,19 @@ import mx.utils.Delegate;
 */
 class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 {
-	
-	public function LooksCommand(name) 
+
+	public function LooksCommand(name)
 	{
 		super(name);
 		d_val.SignalChanged.Connect(SlotChanged, this);
 	}
-	
+
 	private function ResetClothes()
 	{
 		DressingRoom.PreviewNodeItem(33565);
 		DressingRoom.ClearPreview();
 	}
-	
+
 	private function ResetLooks(data)
 	{
 		var charCreation:CharacterCreation = new CharacterCreation(true);
@@ -35,12 +35,12 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 		if (data) d_val.SetValue(data);
 		else d_val.SetValue(false);
 	}
-	
-	private function SetInvisible() 
+
+	private function SetInvisible()
 	{
 		playerCharacter.AddLooksPackage(7752815);
 	}
-	
+
 	private function ApplyLooksPackages(target:Character, data:Array)
 	{
 		for (var i = 0; i < data.length; i++)
@@ -49,9 +49,11 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 			if (value[0] == "hide") value[0] = "7752815";
 			if (isNaN(Number(value[0]))) continue;
 			target.AddLooksPackage(Number(value[0]), Number(value[1]));
+			if (!target["lookspackages"]) target["lookspackages"] = [];
+			target["lookspackages"].push([Number(value[0]), Number(value[1])]);
 		}
-	}	
-	
+	}
+
 	// 1, player, target,all, or omitted
 	// 2, lookspacakges,configuration id
 	private function SlotChanged(dv:DistributedValue)
@@ -74,13 +76,7 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 				for (var i = 0; i < Dynel.s_DynelList.GetLength(); i++)
 				{
 					var dynel:Character = Dynel.s_DynelList.GetObject(i);
-					if (dynel.GetID().Equal(playerCharacter.GetID()) ||
-						dynel.IsPet() ||
-						dynel.GetID().IsSimpleDynel() ||
-						dynel.GetID().IsDestructible() ||
-						dynel.GetStat(_global.Enums.Stat.e_CarsGroup) == 2 ||
-						dynel.IsMerchant()
-					) continue;
+					if (!dynel.GetID().IsPlayer() && !dynel.GetID().IsNpc()) continue;
 					var pairs:Array = data.split(";");
 					restoring = 0;
 					if (pairs[0] == "clear")
@@ -88,6 +84,14 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 						restoring = 20;
 						dynel.RemoveAllLooksPackages();
 						pairs.shift();
+					}
+					else if (pairs[0] == "restore")
+					{
+						pairs.shift();
+						for (var y in dynel["lookspackages"])
+						{
+							dynel.RemoveLooksPackage(dynel["lookspackages"][y][0], dynel["lookspackages"][y][1]);
+						}
 					}
 					else if (pairs[0] == "keep") pairs.shift();
 					setTimeout(f, restoring, dynel, pairs);
@@ -108,7 +112,7 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 					}
 					var dynel:Character = Character.GetCharacter(target);
 					if (dynel)
-					{	
+					{
 						var pairs:Array = data.split(";");
 						var restoring = 0;
 						if (pairs[0] == "clear")
@@ -116,6 +120,14 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 							restoring = 20;
 							dynel.RemoveAllLooksPackages();
 							pairs.shift();
+						}
+						else if (pairs[0] == "restore")
+						{
+							pairs.shift();
+							for (var y in dynel["lookspackages"])
+							{
+								dynel.RemoveLooksPackage(dynel["lookspackages"][y][0], dynel["lookspackages"][y][1]);
+							}
 						}
 						else if (pairs[0] == "keep") pairs.shift();
 						setTimeout(f, restoring, dynel, pairs);
@@ -132,7 +144,7 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 				data = data.join(",");
 				var pairs:Array = data.split(";");
 				var restoring = 0;
-				
+
 				if (pairs[0].toLowerCase() == "reset")
 				{
 					playerCharacter.RemoveAllLooksPackages();
@@ -183,6 +195,14 @@ class com.fox.PhotoMode.cmd.LooksCommand extends ChatCommand
 							restoring = 20;
 							dynel.RemoveAllLooksPackages();
 							pairs.shift();
+						}
+						if (pairs[0] == "restore")
+						{
+							pairs.shift();
+							for (var y in dynel["lookspackages"])
+							{
+								dynel.RemoveLooksPackage(dynel["lookspackages"][y][0], dynel["lookspackages"][y][1]);
+							}
 						}
 						else if (pairs[0] == "keep") pairs.shift();
 						setTimeout(f, restoring, dynel, pairs);

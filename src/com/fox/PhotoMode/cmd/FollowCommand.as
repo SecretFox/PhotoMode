@@ -13,14 +13,14 @@ import mx.utils.Delegate;
 */
 class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 {
-	public function FollowCommand(name) 
+	public function FollowCommand(name)
 	{
 		super(name);
 		d_val.SignalChanged.Connect(SlotChanged, this);
 		chatCommands.push(this);
 	}
-	
-	private function Disable() 
+
+	private function Disable()
 	{
 		if (d_val.GetValue())
 		{
@@ -42,7 +42,7 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 			MoveToPlayer(true);
 		}
 	}
-	
+
 	private function Start()
 	{
 		DisableOthers(this);
@@ -53,7 +53,7 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 		lookYOffset = 0;
 		MoveToStart(true);
 	}
-	
+
 	private function MoveToStart(firstRun)
 	{
 		var cameraPosition:Vector3 = followCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
@@ -72,7 +72,7 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 			Camera.m_AngleY = followCharacter.GetRotation();
 		}
 	}
-	
+
 	private function SlotChanged(dv:DistributedValue, temp)
 	{
 		var value = dv.GetValue();
@@ -139,19 +139,8 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 		}
 	}
 
-	static function HandleMovement()
+	static function HandleMovement(frameMulti)
 	{
-		var currentFrame = getTimer();
-		if (currentFrame - lastFrame < 5 ) return;
-		var frameMulti = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
-		var cameraPosition:Vector3;
-		var lookPosition:Vector3;
-		var rotation:Number;
-		var speed:Number = Helper.GetMovementSpeed(walkingToggled) * frameMulti;
-		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
-		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
 		if (!followCharacter.GetDistanceToPlayer() || followCharacter.IsDead())
 		{
 			followCharacter = undefined;
@@ -159,19 +148,33 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 			Feedback(1);
 			return;
 		}
+		var cameraPosition:Vector3;
+		var lookPosition:Vector3;
+		var rotation:Number;
+		var speed:Number = Helper.GetMovementSpeed(walkingToggled, adjustingHeight) * frameMulti;
+		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
+		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
+		var tempKeys:Array;
+		if (adjustingHeight)
+		{
+			tempKeys = keysDown.concat();
+			if (!Key.isDown(Key.SHIFT)) tempKeys.push("SPACE");
+			else tempKeys.push("-SPACE");
+		}
+		else tempKeys = keysDown;
 		cameraPosition = followCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 		lookPosition = followCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 		rotation = Helper.GetConvertedRotation(followCharacter.GetRotation());
 
-		var adj = Math.abs(yAdjustQueue) < 0.004 ? yAdjustQueue : yAdjustQueue / 30;
+		var adj = Math.abs(yAdjustQueue) < 0.008 ? yAdjustQueue : yAdjustQueue / 150 * frameMulti;
 		yAdjustQueue -= adj;
 		yOffset += adj;
 		yOffset = Helper.LimitValue( -0.75, 1, yOffset);
 		cameraPosition.y += yOffset;
 		var rotated:Boolean = false;
-		for (var i in keysDown)
+		for (var i in tempKeys)
 		{
-			switch (keysDown[i])
+			switch (tempKeys[i])
 			{
 				case 999:
 					var mousePosition = Mouse.getPosition();
@@ -197,12 +200,14 @@ class com.fox.PhotoMode.cmd.FollowCommand extends ChatCommand
 					rotated = true;
 					break;
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
+				case "SPACE":
 					if (yAdjustQueue < 0) yAdjustQueue = 0;
-					yAdjustQueue += 0.3 * speed;
+					yAdjustQueue += speed / 25;
 					break;
+				case "-SPACE":
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
 					if (yAdjustQueue > 0) yAdjustQueue = 0;
-					yAdjustQueue -= 0.3 * speed;
+					yAdjustQueue -= speed / 25;
 					break;
 				case inputKeys[3]:
 				//case _global.Enums.InputCommand.e_InputCommand_Movement_StrafeLeft:

@@ -2,6 +2,7 @@ import com.GameInterface.DistributedValue;
 import com.GameInterface.Game.Camera;
 import com.GameInterface.Game.Character;
 import com.GameInterface.MathLib.Vector3;
+import com.Utils.Archive;
 import com.fox.ModBase;
 import com.fox.PhotoMode.Helper;
 import com.fox.PhotoMode.PhotoMode;
@@ -21,6 +22,7 @@ import flash.geom.Point;
 */
 class com.fox.PhotoMode.PhotoModeShared extends ModBase
 {
+	static var config:Archive;
 	static var m_Window:MovieClip;
 	static var m_SwfRoot:MovieClip;
 	static var Mod:PhotoMode;
@@ -74,6 +76,7 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 	static var walkingToggled:Boolean;
 	static var currentFov:Number;
 	static var lockedRotation:Number;
+	static var lockedAngle:Number;
 	static var orbitDirection:Number;
 	static var yOffset:Number;
 	static var xOffset:Number;
@@ -135,13 +138,13 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 	{
 		var cameraPosition:Vector3 = playerCharacter.GetPosition();
 		var rotation = Helper.GetConvertedRotation(playerCharacter.GetRotation());
-		cameraPosition.x += 2* -Math.sin(rotation);
-		cameraPosition.z += 2* -Math.cos(rotation);
-		var lookPosition:Vector3 = new Vector3(cameraPosition.x* Math.sin(rotation), cameraPosition.y, cameraPosition.z* Math.cos(rotation));
+		cameraPosition.x += 2 * -Math.sin(rotation);
+		cameraPosition.z += 2 * -Math.cos(rotation);
+		var lookPosition:Vector3 = new Vector3(cameraPosition.x + 2 * Math.sin(rotation), cameraPosition.y + lookYOffset, cameraPosition.z + 2 * Math.cos(rotation));
 		Camera.PlaceCamera(cameraPosition.x, cameraPosition.y, cameraPosition.z, lookPosition.x, lookPosition.y, lookPosition.z, 0, 1, 0);
-		Camera.SetFOV(currentFov * Math.PI / 180);
 		if (force)
 		{
+			Camera.SetFOV(currentFov * Math.PI / 180);
 			Camera.m_Pos = cameraPosition;
 			Camera.m_AngleY = playerCharacter.GetRotation();
 		}
@@ -157,6 +160,7 @@ class com.fox.PhotoMode.PhotoModeShared extends ModBase
 		walkingToggled = false;
 		followCharacter = undefined;
 		lockedRotation = undefined;
+		lockedAngle = undefined;
 		lockCharacter = undefined;
 		currentFov = 60;
 		lookYOffset = 0;

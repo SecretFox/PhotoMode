@@ -50,7 +50,7 @@ class com.fox.PhotoMode.cmd.LockCommand extends ChatCommand
 
 	private function MoveToStart(firstRun)
 	{
-		var lookPosition:Vector3 = lockCharacter.GetPosition(_global.Enums.AttractorPlace.e_Eyes);
+		var lookPosition:Vector3 = lockCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 		Camera.PlaceCamera(Camera.m_Pos.x, Camera.m_Pos.y, Camera.m_Pos.z, lookPosition.x, lookPosition.y, lookPosition.z, 0, 1, 0);
 		if (firstRun)
 		{
@@ -136,24 +136,24 @@ class com.fox.PhotoMode.cmd.LockCommand extends ChatCommand
 		}
 	}
 
-	static function HandleMovement()
+	static function HandleMovement(frameMulti)
 	{
-		var currentFrame = getTimer();
-		if (currentFrame - lastFrame < 5 ) return;
-		var frameMulti = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
-		var cameraPosition:Vector3 = Camera.m_Pos;
-		var lookPosition:Vector3 = lockCharacter.GetPosition(_global.Enums.AttractorPlace.e_Eyes);
-        lookPosition.y -= 0.1;
-		var rotation:Number = Helper.GetConvertedRotation(Camera.m_AngleY);;
-		var speed:Number = Helper.GetMovementSpeed(walkingToggled) * frameMulti;
 		if ((!lockCharacter.GetDistanceToPlayer() || lockCharacter.IsDead()) && !lockCharacter.GetID().Equal(playerCharacter.GetID()))
 		{
 			lockCharacter = undefined;
 			cmdLock.value = false;
 			Feedback(1);
 			return;
+		}
+		var cameraPosition:Vector3 = Camera.m_Pos;
+		var lookPosition:Vector3 = lockCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
+		lookPosition.y -= 0.1;
+		var rotation:Number = Helper.GetConvertedRotation(Camera.m_AngleY);;
+		var speed:Number = Helper.GetMovementSpeed(walkingToggled, adjustingHeight) * frameMulti;
+		if (adjustingHeight)
+		{
+			if (Key.isDown(Key.SHIFT)) yAdjustQueue -= 0.50 * speed;
+			else yAdjustQueue += 0.50 * speed;
 		}
 		var adj = Math.abs(yAdjustQueue) < 0.008 ? yAdjustQueue : yAdjustQueue / 25;
 		yAdjustQueue -= adj;

@@ -139,19 +139,8 @@ class com.fox.PhotoMode.cmd.VanityCommand extends ChatCommand
 		}
 	}
 
-	static function HandleMovement()
+	static function HandleMovement(frameMulti)
 	{
-		var currentFrame = getTimer();
-		if (currentFrame - lastFrame < 5 ) return;
-		var frameMulti = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
-		var cameraPosition:Vector3;
-		var lookPosition:Vector3;
-		var rotation:Number;
-		var speed:Number = Helper.GetMovementSpeed(walkingToggled) * frameMulti;
-		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
-		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
 		if (!vanityCharacter.GetDistanceToPlayer() || vanityCharacter.IsDead())
 		{
 			if (!vanityCharacter.GetID().Equal(playerCharacter.GetID()))
@@ -162,9 +151,21 @@ class com.fox.PhotoMode.cmd.VanityCommand extends ChatCommand
 				return;
 			}
 		}
+		var cameraPosition:Vector3;
+		var lookPosition:Vector3;
+		var rotation:Number;
+		var speed:Number = Helper.GetMovementSpeed(walkingToggled, adjustingHeight) * frameMulti;
+		var xMultiplier = panSpeedX * frameMulti * currentFov / 60;
+		var yMultiplier = PanSpeedY * frameMulti * currentFov / 60;
 		cameraPosition = vanityCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 		rotation = Helper.GetConvertedRotation(Camera.m_AngleY);
-
+		var tempKeys:Array;
+        if (adjustingHeight){
+            tempKeys = keysDown.concat();
+            if (!Key.isDown(Key.SHIFT)) tempKeys.push("SPACE");
+            else tempKeys.push("-SPACE");
+        }
+        else tempKeys = keysDown;
 		var adj = Math.abs(yAdjustQueue) < 0.0005 ? yAdjustQueue : yAdjustQueue / 50;
 		yAdjustQueue -= adj;
 		yOffset += adj;
@@ -176,9 +177,9 @@ class com.fox.PhotoMode.cmd.VanityCommand extends ChatCommand
 		lookPosition = vanityCharacter.GetPosition(_global.Enums.AttractorPlace.e_CameraAim);
 		lookPosition.y += yOffset;
 		var rotated;
-		for (var i in keysDown)
+		for (var i in tempKeys)
 		{
-			switch (keysDown[i])
+			switch (tempKeys[i])
 			{
 				case 999:
 					var mousePosition = Mouse.getPosition();
@@ -199,10 +200,12 @@ class com.fox.PhotoMode.cmd.VanityCommand extends ChatCommand
 					rotated = true;
 					break;
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Forward:
+                case "SPACE":
 					if (yAdjustQueue < 0) yAdjustQueue = 0;
 					yAdjustQueue += 0.075 * speed;
 					break;
 				case _global.Enums.InputCommand.e_InputCommand_Movement_Backward:
+                case "-SPACE":
 					if (yAdjustQueue > 0) yAdjustQueue = 0;
 					yAdjustQueue -= 0.075 * speed;
 					break;

@@ -66,19 +66,23 @@ Don't forget the quotes (unless using true/false value)
 * `/option PhotoMode_Lock "target/random/playerName/self"`, can also be accessed from the command window  
 * `/option PhotoMode_Vanity "target/random/playerName/self"`, can also be accessed from the command window  
 * `/option PhotoMode_Window true/false` Shows/Hides command window. Same as right clicking the icon
-* `/option PhotoMode_Emote "all/playername/target,EmoteName"` Plays client sided emote, for list of emotes see [here](https://github.com/super-jenius/Untold/blob/master/fox/Animation.xml)
 * `/option PhotoMode_StoreEmote1-10 "emoteString"` Stores emote string for PhotoMode_Emote command. Stored emote can be called in PhotoMode by pressing Select Team Member 1-10 keybinds  
 * `/option PhotoMode_MovementSpeed 1.0` Movement speed  
 * `/option PhotoMode_PanSpeedX 1.0` Camera panning speed on X axis  
 * `/option PhotoMode_PanSpeedY 1.0` Camera panning speed on Y axis  
 * `/option PhotoMode_ChatOnAlt true/false` By default holding Alt will allow player to access chat, but this also disables camera panning which can be an issue if tab gets stuck due to alt tabbing  
+* `/option PhotoMode_Emote "all/playername/target,EmoteName"` Plays client sided emote, for list of emotes see [here](https://github.com/super-jenius/Untold/blob/master/fox/Animation.xml)
 * `/option PhotoMode_Looks "all/playername/target,lookspackage"` Applies client sided lookspackage, for list of lookspackages see [here](https://github.com/super-jenius/Untold/blob/master/fox/LooksRDB.xml) or [here](https://github.com/SecretFox/PhotoMode/blob/main/Lookconfig_all.txt)  
   * multiple id's can also be separated by using `;`
-  * Second arguments can also start with "reset/keep/clear/hide/restore", these can come helpful when applying certain lookspackages or building complex looks. Reset can be used to restore own looks, but it doesn't work on others.
+  * Second arguments can also start with "reset/clear/hide/restore", these can come helpful when applying certain lookspackages or building complex looks. Reset can be used to restore own looks, but it doesn't work on others.
   * Examples:
-    * `/option PhotoMode_Looks "clear;6941926"` Turns player into Geary
-    * `/option PhotoMode_Looks "reset"` Returns players original look
-    * `/option PhotoMode_Looks "target,clear;6697044"` Turns targeted player into Sonnac
+    * `/option PhotoMode_Looks "clear;6941926"` Turns player into Geary  
+    * `/option PhotoMode_Looks "reset"` Returns players original look  
+    * `/option PhotoMode_Looks "target,clear;6697044"` Turns targeted player into Sonnac  
+    * `/option PhotoMode_Looks "target,restore;6697044"` Turns targeted back into normal  
+
+	
+	
 ### Install PhotoMode
 Extract PhotoMode-v1.2.2.zip to `Secret World Legends\Data\Gui\Custom\Flash\`
 Extra: Save `AgarthaTour.txt` to `Secret World Legends\scripts\`

@@ -87,10 +87,10 @@ class com.fox.PhotoMode.Helper extends PhotoModeShared
 		return Math.PI - rotation;
 	}
 	
-	static function GetMovementSpeed(walkingEnabled)
+	static function GetMovementSpeed(walkingEnabled, skipSprint)
 	{
 		if (walkingEnabled) return movementSpeed / 3;
-		else if (Key.isDown(Key.SHIFT)) return movementSpeed * 3;
+        else if (Key.isDown(Key.SHIFT) && !skipSprint) return movementSpeed * 3;
 		return movementSpeed;
 	}
 	

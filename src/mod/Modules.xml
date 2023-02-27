@@ -2,11 +2,12 @@
 <Root>
   <Module  name = "PhotoMode"
     movie       = "PhotoMode\PhotoMode.swf"
-    flags       = "GMF_DONT_UNLOAD"
+    flags       = "GMF_DONT_UNLOAD | GMF_CFG_STORE_USER_CONFIG"
     depth_layer = "Back"
     sub_depth   = "1"
     variable    = "PhotoMode"
     criteria    = "PhotoMode &amp;&amp; (guimode &amp; (GUIMODEFLAGS_INPLAY | GUIMODEFLAGS_ENABLEALLGUI))"
+    config_name = "PhotoMode_Cfg"
   />
   <Module  name = "PhotoModeIcon"
     movie       = "PhotoMode\PhotoModeIcon.swf"
