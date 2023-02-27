@@ -701,6 +701,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 				}
 			}
 			if (matchedEntries[0].id) matchedEntries.unshift({label:"", id:""});
+			if (matchedEntries.length == 0) matchedEntries.unshift({label:"", id:""});
 			m_assetSelector.dataProvider = matchedEntries;
 			m_assetSelector.rowCount = Math.min(matchedEntries.length, 20);
 			if ( lastMatch != undefined) m_assetSelector.selectedIndex = lastMatch;
@@ -719,6 +720,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 				}
 			}
 			if (matchedEntries[0].id) matchedEntries.unshift({label:"", id:""});
+			if (matchedEntries.length == 0) matchedEntries.unshift({label:"", id:""});
 			m_assetSelector.dataProvider = matchedEntries;
 			m_assetSelector.rowCount = Math.min(matchedEntries.length, 20);
 			if ( lastMatch != undefined) m_assetSelector.selectedIndex = lastMatch;

@@ -191,7 +191,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			var pos:Point = config.FindEntry("windowPos", new Point(30, 40));
 			m_Window = m_SwfRoot.attachMovie("WinComp", "m_Window", m_SwfRoot.getNextHighestDepth(), {_x:pos.x, _y:pos.y});
 			m_Window.addEventListener("dragEnd", this, "SaveWindowPosition");
-			m_Window.SetTitle(" PhotoMode v1.4.1", "left");
+			m_Window.SetTitle(" PhotoMode v1.4.2", "left");
 			m_Window.SetPadding(3);
 			m_Window.SetContent("WindowContent");
 			m_Window.ShowCloseButton(true);
