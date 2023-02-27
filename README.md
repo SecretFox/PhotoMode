@@ -41,7 +41,7 @@ These should change to match your in-game keybinds, by default;
 * Alt - Has to be held down to access chat window
 * V - Returns camera to player
 * Numlock/middleMouse (autorun) - keep moving camera towards the current direction (also prevents mouse dragging from changing direction)
-* Select Self/Team/Raid Member - Runs emote string stored with PhotoMode_StoreEmote command. Only works while in PhotoMode  
+* (Shift+)Select Self/Team/Raid Member - Runs emote string stored with PhotoMode_StoreEmote command. Only works while in PhotoMode  
 
 ### Known issues
 Some zones have persistent fog that can't seem to be removed  
@@ -68,7 +68,7 @@ Don't forget the quotes (unless using true/false value)
 * `/option PhotoMode_Lock "target/random/playerName/self"`, can also be accessed from the command window  
 * `/option PhotoMode_Vanity "target/random/playerName/self"`, can also be accessed from the command window  
 * `/option PhotoMode_Window true/false` Shows/Hides command window. Same as right clicking the icon
-* `/option PhotoMode_StoreEmote1-10 "emoteString"` Stores emote string for PhotoMode_Emote command. Stored emote can be called in PhotoMode by pressing Select Team Member 1-10 keybinds  
+* `/option PhotoMode_StoreEmote1-10 "emoteString"` Stores emote string for PhotoMode_Emote command. Stored emote can be called in PhotoMode by pressing F1-F5 keys (or Shift + F1-F5 for 6-10)
 * `/option PhotoMode_MovementSpeed 1.0` Movement speed  
 * `/option PhotoMode_PanSpeedX 1.0` Camera panning speed on X axis  
 * `/option PhotoMode_PanSpeedY 1.0` Camera panning speed on Y axis  
