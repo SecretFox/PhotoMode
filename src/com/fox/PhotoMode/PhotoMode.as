@@ -196,7 +196,7 @@ class com.fox.PhotoMode.PhotoMode extends PhotoModeShared
 			m_Window.SetContent("WindowContent");
 			m_Window.ShowCloseButton(true);
 			m_Window.ShowStroke(false);
-			m_Window.ShowResizeButton(false);
+			m_Window.ShowResizeButton(true);
 			m_Window.ShowFooter(false);
 			m_Window.ShowHelpButton(false);
 			m_Window.m_ShowHelpButton = false;

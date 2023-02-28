@@ -74,9 +74,25 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 
 	public function GetSize()
 	{
-		return new Point(m_Hitbox._width, m_Hitbox._height);
+		return new Point(this._width, this._height);
 	}
-
+	
+	private function SetSize(width, height)
+	{
+		var orgWidth:Number = _width * 100 / _xscale;
+		var newScale = _xscale = width / orgWidth * 100;
+		if (newScale < 50) newScale = 50;
+		if (newScale > 300) newScale = 300;
+		PhotoModeShared.config.ReplaceEntry("windowScale", newScale);
+		SetScale(newScale);
+		Layout();
+	}
+	
+	public function SetScale(scale)
+	{
+		_parent.m_Title._xscale = _parent.m_Title._yscale = _yscale = _xscale = scale;
+	}
+	
 	private function configUI():Void
 	{
 		keylistener = new Object();
@@ -145,6 +161,7 @@ class com.fox.PhotoMode.GUI.WindowContent extends WindowComponentContent
 		m_Feedback.text = ""
 		ModeSelected();
 		FocusChanged();
+		SetScale(PhotoModeShared.config.FindEntry("windowScale",100));
 		Layout();
 	}
 
